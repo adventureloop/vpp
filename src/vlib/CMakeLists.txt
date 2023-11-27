@@ -59,9 +59,10 @@ add_vpp_library(vlib
   format.c
   handoff_trace.c
   init.c
-  linux/pci.c
-  linux/vfio.c
-  linux/vmbus.c
+#  linux/pci.c
+#  linux/vfio.c
+#  linux/vmbus.c
+  freebsd/pci.c
   log.c
   main.c
   node.c
@@ -112,7 +113,7 @@ add_vpp_library(vlib
   format_funcs.h
   global_funcs.h
   init.h
-  linux/vfio.h
+#  linux/vfio.h
   log.h
   main.h
   node_funcs.h

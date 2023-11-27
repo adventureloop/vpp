@@ -37,7 +37,7 @@ execute_process(
   OUTPUT_VARIABLE VPP_VERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-string(REPLACE "-" ";" VPP_LIB_VERSION ${VPP_VERSION})
+string(REPLACE "-" ";" VPP_LIB_VERSION "${VPP_VERSION}")
 list(GET VPP_LIB_VERSION 0 VPP_LIB_VERSION)
 
 ##############################################################################
@@ -94,7 +94,8 @@ if(CMAKE_CROSSCOMPILING)
     /usr/lib/${CMAKE_HOST_SYSTEM_PROCESSOR}-linux-gnu/lib/
   )
 endif()
-set(CMAKE_C_COMPILER_TARGET ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu)
+#set(CMAKE_C_COMPILER_TARGET ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu)
+set(CMAKE_C_COMPILER_TARGET ${CMAKE_SYSTEM_PROCESSOR}-freebsd)
 
 ##############################################################################
 # build config
@@ -227,6 +228,14 @@ elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     plugins tools/vppapigen tools/g2 tools/perftool cmake pkg
     tools/appimage
   )
+elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
+  find_package(OpenSSL)
+  set(SUBDIRS
+    vppinfra svm vlib vlibmemory vlibapi vnet vpp vat vat2 vcl vpp-api
+    plugins tools/vppapigen tools/g2 tools/perftool cmake pkg
+    tools/appimage
+  )
+    #later
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
   set(SUBDIRS vppinfra)
 else()

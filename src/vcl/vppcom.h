@@ -16,10 +16,12 @@
 #ifndef included_vppcom_h
 #define included_vppcom_h
 
+#include <sys/types.h>
 #include <netdb.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+
 #include <sys/epoll.h>
 
 /* clang-format off */
@@ -116,7 +118,8 @@ typedef enum
   VPPCOM_EFAULT = -EFAULT,
   VPPCOM_ENOMEM = -ENOMEM,
   VPPCOM_EINVAL = -EINVAL,
-  VPPCOM_EBADFD = -EBADFD,
+//  VPPCOM_EBADFD = -EBADFD,
+  VPPCOM_EBADFD = -EBADF,
   VPPCOM_EAFNOSUPPORT = -EAFNOSUPPORT,
   VPPCOM_ECONNABORTED = -ECONNABORTED,
   VPPCOM_ECONNRESET = -ECONNRESET,

@@ -261,10 +261,12 @@ static uword
 startup_config_process (vlib_main_t * vm,
 			vlib_node_runtime_t * rt, vlib_frame_t * f)
 {
+//printf("%s:%d\n", __func__, __LINE__);
   unix_main_t *um = &unix_main;
   unformat_input_t in;
 
   vlib_process_suspend (vm, 2.0);
+//printf("%s:%d\n", __func__, __LINE__);
 
   while (um->unix_config_complete == 0)
     vlib_process_suspend (vm, 0.1);
@@ -296,6 +298,7 @@ VLIB_REGISTER_NODE (startup_config_node,static) = {
 static clib_error_t *
 unix_config (vlib_main_t * vm, unformat_input_t * input)
 {
+//printf("%s:%d\n", __func__, __LINE__);
   vlib_global_main_t *vgm = vlib_get_global_main ();
   unix_main_t *um = &unix_main;
   clib_error_t *error = 0;
@@ -432,6 +435,7 @@ unix_config (vlib_main_t * vm, unformat_input_t * input)
   if (chdir ((char *) um->runtime_dir) < 0)
     return clib_error_return_unix (0, "chdir('%s')", um->runtime_dir);
 
+//printf("%s:%d\n", __func__, __LINE__);
   error = setup_signal_handlers (um);
   if (error)
     return error;
@@ -455,6 +459,7 @@ unix_config (vlib_main_t * vm, unformat_input_t * input)
       openlog (vgm->name, LOG_CONS | LOG_PERROR | LOG_PID, LOG_DAEMON);
       clib_error_register_handler (unix_error_handler, um);
 
+//printf("turning into a monster\n");
       if (!(um->flags & UNIX_FLAG_NODAEMON) && daemon ( /* chdir to / */ 0,
 						       /* stdin/stdout/stderr -> /dev/null */
 						       0) < 0)
@@ -612,6 +617,7 @@ vlib_thread_stack_init (uword thread_index)
 int
 vlib_unix_main (int argc, char *argv[])
 {
+//printf("%s:%d\n", __func__, __LINE__);
   vlib_global_main_t *vgm = vlib_get_global_main ();
   vlib_main_t *vm = vlib_get_first_main (); /* one and only time for this! */
   unformat_input_t input;
@@ -636,6 +642,7 @@ vlib_unix_main (int argc, char *argv[])
   else
     vgm->exec_path = vgm->name = argv[0];
 
+//printf("%s:%d %s\n", __func__, __LINE__, vgm->exec_path);
   vgm->argv = (u8 **) argv;
 
   clib_time_init (&vm->clib_time);
@@ -653,16 +660,26 @@ vlib_unix_main (int argc, char *argv[])
     }
   unformat_free (&input);
 
+//printf("%s:%d\n", __func__, __LINE__);
   i = vlib_plugin_early_init (vm);
-  if (i)
+  if (i) {
+//printf("%s:%d vlib_plugin_early_init returned %d\n", __func__, __LINE__, i);
     return i;
+  }
+//printf("%s:%d\n", __func__, __LINE__);
 
   unformat_init_command_line (&input, (char **) vgm->argv);
-  if (vgm->init_functions_called == 0)
+//printf("%s:%d\n", __func__, __LINE__);
+  if (vgm->init_functions_called == 0) {
+//printf("%s:%d\n", __func__, __LINE__);
     vgm->init_functions_called = hash_create (0, /* value bytes */ 0);
+    }
+//printf("%s:%d\n", __func__, __LINE__);
   e = vlib_call_all_config_functions (vm, &input, 1 /* early */ );
+//printf("%s:%d\n", __func__, __LINE__);
   if (e != 0)
     {
+//printf("%s:%d %p\n", __func__, __LINE__, e);
       clib_error_report (e);
       return 1;
     }
@@ -670,6 +687,7 @@ vlib_unix_main (int argc, char *argv[])
 
   /* always load symbols, for signal handler and mheap memory get/put backtrace */
   clib_elf_main_init (vgm->exec_path);
+//printf("%s:%d\n", __func__, __LINE__);
 
   vec_validate (vlib_thread_stacks, 0);
   vlib_thread_stack_init (0);
@@ -677,10 +695,12 @@ vlib_unix_main (int argc, char *argv[])
   __os_thread_index = 0;
   vm->thread_index = 0;
 
+//printf("%s:%d this shouldn't return\n", __func__, __LINE__);
   vlib_process_start_switch_stack (vm, 0);
   i = clib_calljmp (thread0, (uword) vm,
 		    (void *) (vlib_thread_stacks[0] +
 			      VLIB_THREAD_STACK_SIZE));
+//printf("%s:%d %d\n", __func__, __LINE__, i);
   return i;
 }
 

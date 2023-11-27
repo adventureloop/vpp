@@ -22,6 +22,11 @@
 #define _GNU_SOURCE
 #include <sys/socket.h>
 
+#define _WANT_UCRED
+
+#include <sys/param.h>
+#include <sys/ucred.h>
+
 #include <svm/ssvm.h>
 #include <vlibmemory/socket_client.h>
 #include <vlibmemory/memory_client.h>
@@ -278,7 +283,7 @@ vl_sock_api_recv_fd_msg_internal (socket_client_main_t * scm, int fds[],
   struct msghdr mh = { 0 };
   struct iovec iov[1];
   ssize_t size = 0;
-  struct ucred *cr = 0;
+//  struct ucred *cr = 0;
   struct cmsghdr *cmsg;
   pid_t pid __attribute__ ((unused));
   uid_t uid __attribute__ ((unused));
@@ -318,6 +323,7 @@ vl_sock_api_recv_fd_msg_internal (socket_client_main_t * scm, int fds[],
     {
       if (cmsg->cmsg_level == SOL_SOCKET)
 	{
+#if 0
 	  if (cmsg->cmsg_type == SCM_CREDENTIALS)
 	    {
 	      cr = (struct ucred *) CMSG_DATA (cmsg);
@@ -325,7 +331,9 @@ vl_sock_api_recv_fd_msg_internal (socket_client_main_t * scm, int fds[],
 	      gid = cr->gid;
 	      pid = cr->pid;
 	    }
-	  else if (cmsg->cmsg_type == SCM_RIGHTS)
+	  else 
+#endif
+	  if (cmsg->cmsg_type == SCM_RIGHTS)
 	    {
 	      clib_memcpy_fast (fds, CMSG_DATA (cmsg), sizeof (int) * n_fds);
 	    }

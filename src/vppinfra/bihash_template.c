@@ -27,6 +27,10 @@
 #define BIHASH_USE_HEAP 1
 #endif
 
+// TODO
+#define MAP_HUGETLB 0
+#define MAP_LOCKED 0
+
 static inline void *BV (alloc_aligned) (BVT (clib_bihash) * h, uword nbytes)
 {
   uword rv;

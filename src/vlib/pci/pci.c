@@ -47,9 +47,10 @@
 #include <dirent.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#if 0
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
-
+#endif
 vlib_pci_main_t pci_main;
 
 VLIB_REGISTER_LOG_CLASS (pci_log, static) = {

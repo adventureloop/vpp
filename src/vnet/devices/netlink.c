@@ -20,8 +20,13 @@
 #include <fcntl.h>
 #include <net/if.h>
 
+#if 0
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+#else
+#include <netlink/netlink.h>
+#include <netlink/netlink_route.h>
+#endif
 
 #include <vlib/vlib.h>
 #include <vlib/unix/unix.h>

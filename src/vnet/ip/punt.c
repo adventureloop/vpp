@@ -35,6 +35,8 @@
 #include <sys/uio.h>
 #include <stdlib.h>
 
+#define UNIX_PATH_MAX 108
+
 punt_main_t punt_main;
 
 char *

@@ -24,7 +24,7 @@
 #include <vnet/session/application_local.h>
 #include <vnet/session/session_debug.h>
 #include <svm/queue.h>
-#include <sys/timerfd.h>
+//#include <sys/timerfd.h>
 
 static inline void
 session_wrk_send_evt_to_main (session_worker_t *wrk, session_evt_elt_t *elt)
@@ -59,8 +59,8 @@ session_wrk_timerfd_update (session_worker_t *wrk, u64 time_ns)
   its.it_interval.tv_sec = 0;
   its.it_interval.tv_nsec = its.it_value.tv_nsec;
 
-  if (timerfd_settime (wrk->timerfd, 0, &its, NULL) == -1)
-    clib_warning ("timerfd_settime");
+//  if (timerfd_settime (wrk->timerfd, 0, &its, NULL) == -1)
+//   clib_warning ("timerfd_settime");
 }
 
 always_inline u64
@@ -2104,8 +2104,8 @@ session_wrk_enable_adaptive_mode (session_worker_t *wrk)
   u32 thread_index = wrk->vm->thread_index;
   clib_file_t template = { 0 };
 
-  if ((wrk->timerfd = timerfd_create (CLOCK_MONOTONIC, TFD_NONBLOCK)) < 0)
-    clib_warning ("timerfd_create");
+//  if ((wrk->timerfd = timerfd_create (CLOCK_MONOTONIC, TFD_NONBLOCK)) < 0)
+//    clib_warning ("timerfd_create");
 
   template.read_function = session_wrk_tfd_read_ready;
   template.write_function = session_wrk_tfd_write_ready;

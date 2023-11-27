@@ -69,6 +69,8 @@
 #endif
 #endif
 
+#include <netlink/netlink.h>
+
 #endif /* ! __KERNEL__ */
 
 
@@ -409,7 +411,9 @@ u8 * format_signal (u8 * s, va_list * args)
       _ (SIGPROF);
       _ (SIGWINCH);
       _ (SIGIO);
+#ifdef SIGPWR
       _ (SIGPWR);
+#endif /* SIGPWR */
 #ifdef SIGSYS
       _ (SIGSYS);
 #endif
@@ -435,7 +439,8 @@ u8 * format_ucontext_pc (u8 * s, va_list * args)
 #elif defined (powerpc64)
   regs = &uc->uc_mcontext.uc_regs->gp_regs[0];
 #elif defined (i386) || defined (__x86_64__)
-  regs = (void *) &uc->uc_mcontext.gregs[0];
+//  regs = (void *) &uc->uc_mcontext.gregs[0];
+	regs = 0;	// TODO
 #elif defined(__aarch64__)
   regs = (void *) &uc->uc_mcontext.pc;
 #endif
@@ -445,7 +450,8 @@ u8 * format_ucontext_pc (u8 * s, va_list * args)
 #elif defined (i386)
   reg_no = REG_EIP;
 #elif defined (__x86_64__)
-  reg_no = REG_RIP;
+  //reg_no = REG_RIP;
+  reg_no = 0;
 #elif defined(__aarch64__)
   reg_no = 0;
 #else

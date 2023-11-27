@@ -26,6 +26,8 @@
 
 #include <vlib/stats/stats.h>
 
+#include <sys/thr.h>
+
 u32
 vl (void *p)
 {
@@ -222,7 +224,7 @@ vlib_thread_init (vlib_main_t * vm)
       cpu_set_t cpuset;
       CPU_ZERO (&cpuset);
       CPU_SET (tm->main_lcore, &cpuset);
-      pthread_setaffinity_np (pthread_self (), sizeof (cpu_set_t), &cpuset);
+//      pthread_setaffinity_np (pthread_self (), sizeof (cpu_set_t), &cpuset);
     }
 
   /* Set up thread 0 */
@@ -232,7 +234,8 @@ vlib_thread_init (vlib_main_t * vm)
   w->thread_mheap = clib_mem_get_heap ();
   w->thread_stack = vlib_thread_stacks[0];
   w->cpu_id = tm->main_lcore;
-  w->lwp = syscall (SYS_gettid);
+//  w->lwp = syscall (SYS_gettid);
+  thr_self(&(w->lwp));
   w->thread_id = pthread_self ();
   tm->n_vlib_mains = 1;
 
@@ -398,7 +401,8 @@ vlib_worker_thread_bootstrap_fn (void *arg)
 {
   vlib_worker_thread_t *w = arg;
 
-  w->lwp = syscall (SYS_gettid);
+// w->lwp = syscall (SYS_gettid);
+  thr_self(&(w->lwp));
   w->thread_id = pthread_self ();
 
   __os_thread_index = w - vlib_worker_threads;
@@ -501,8 +505,8 @@ vlib_launch_thread_int (void *fp, vlib_worker_thread_t * w, unsigned cpu_id)
       if (pthread_create (&worker, &attr, fp_arg, (void *) w))
 	return clib_error_return_unix (0, "pthread_create");
 
-      if (pthread_setaffinity_np (worker, sizeof (cpu_set_t), &cpuset))
-	return clib_error_return_unix (0, "pthread_setaffinity_np");
+//      if (pthread_setaffinity_np (worker, sizeof (cpu_set_t), &cpuset))
+//	return clib_error_return_unix (0, "pthread_setaffinity_np");
 
       if (pthread_attr_destroy (&attr))
 	return clib_error_return_unix (0, "pthread_attr_destroy");

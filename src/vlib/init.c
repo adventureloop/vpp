@@ -423,6 +423,7 @@ clib_error_t *
 vlib_call_all_config_functions (vlib_main_t * vm,
 				unformat_input_t * input, int is_early)
 {
+//printf("%s:%d\n", __func__, __LINE__);
   vlib_global_main_t *vgm = vlib_get_global_main ();
   clib_error_t *error = 0;
   vlib_config_function_runtime_t *c, **all;
@@ -432,22 +433,28 @@ vlib_call_all_config_functions (vlib_main_t * vm,
   hash = hash_create_string (0, sizeof (uword));
   all = 0;
 
+//printf("%s:%d\n", __func__, __LINE__);
   c = vgm->config_function_registrations;
 
+//printf("%s:%d\n", __func__, __LINE__);
   while (c)
     {
+//printf("%s:%d\n", __func__, __LINE__);
       hash_set_mem (hash, c->name, vec_len (all));
       vec_add1 (all, c);
       unformat_init (&c->input, 0, 0);
       c = c->next_registration;
     }
 
+//printf("%s:%d\n", __func__, __LINE__);
   while (unformat_check_input (input) != UNFORMAT_END_OF_INPUT)
     {
+//printf("%s:%d\n", __func__, __LINE__);
       u8 *s, *v;
 
       if (!unformat (input, "%s %v", &s, &v) || !(p = hash_get_mem (hash, s)))
 	{
+	printf("here, not knowing the input: %s %s\n", s, v);
 	  error = clib_error_create ("unknown input `%s %v'", s, v);
 	  goto done;
 	}
@@ -460,25 +467,34 @@ vlib_call_all_config_functions (vlib_main_t * vm,
       vec_free (s);
     }
 
+//printf("%s:%d\n", __func__, __LINE__);
   for (i = 0; i < vec_len (all); i++)
     {
+//printf("%s:%d\n", __func__, __LINE__);
       c = all[i];
+//printf("%s:%d vec_len %d i %ld name %s\n", __func__, __LINE__, vec_len(all), i, c->name);
 
       /* Is this an early config? Are we doing early configs? */
       if (is_early ^ c->is_early)
 	continue;
 
+//printf("%s:%d\n", __func__, __LINE__);
       /* Already called? */
       if (hash_get (vgm->init_functions_called, c->function))
 	continue;
+//printf("%s:%d\n", __func__, __LINE__);
       hash_set1 (vgm->init_functions_called, c->function);
 
+//printf("%s:%d\n", __func__, __LINE__);
       error = c->function (vm, &c->input);
+//printf("%s:%d error %p\n", __func__, __LINE__, error);
       if (error)
 	goto done;
+//printf("%s:%d\n", __func__, __LINE__);
     }
 
 done:
+//printf("%s:%d done:\n", __func__, __LINE__);
   for (i = 0; i < vec_len (all); i++)
     {
       c = all[i];

@@ -16,7 +16,8 @@
  */
 
 #include <sys/socket.h>
-#include <linux/if.h>
+//#include <linux/if.h>
+#include <net/if.h>
 
 #include <vnet/vnet.h>
 #include <vnet/plugin/plugin.h>

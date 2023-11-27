@@ -17,7 +17,7 @@
  *------------------------------------------------------------------
  */
 
-#include <linux/if_packet.h>
+//#include <linux/if_packet.h>
 
 #include <vppinfra/lock.h>
 #include <vlib/log.h>

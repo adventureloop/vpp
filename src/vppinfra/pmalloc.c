@@ -72,6 +72,7 @@ clib_pmalloc_init (clib_pmalloc_main_t * pm, uword base_addr, uword size)
 
   if (base == ~0)
     {
+    //oh shit we are here! Trying to reserve 70TB (17179869184)
       pm->error = clib_error_return (0, "failed to reserve %u pages",
 				     pm->max_pages);
       return -1;
@@ -271,17 +272,24 @@ pmalloc_map_pages (clib_pmalloc_main_t * pm, clib_pmalloc_arena_t * a,
     }
   else
     {
-      if (a->log2_subpage_sz != clib_mem_get_log2_page_size ())
-	mmap_flags |= MAP_HUGETLB;
+//      if (a->log2_subpage_sz != clib_mem_get_log2_page_size ())
+//	mmap_flags |= MAP_HUGETLB;
 
       mmap_flags |= MAP_PRIVATE | MAP_ANONYMOUS;
       a->fd = -1;
     }
 
+//- pm->base should not be 0 here
+//- pm->pages should be initialised to some value
   va = pm->base + (((uword) vec_len (pm->pages)) << pm->def_log2_page_sz);
   if (mmap (va, size, PROT_READ | PROT_WRITE, mmap_flags, a->fd, 0) ==
       MAP_FAILED)
     {
+//MAP_FIXED above seem to indicate that pm->base can't ever be 0 (or the va
+//calcuation). We aren't getting it correctly *siomewhere*
+
+
+    	__builtin_debugtrap();
       pm->error = clib_error_return_unix (0, "failed to mmap %u pages at %p "
 					  "fd %d numa %d flags 0x%x", n_pages,
 					  va, a->fd, numa_node, mmap_flags);

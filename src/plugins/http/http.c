@@ -161,7 +161,7 @@ http_ts_accept_callback (session_t *ts)
   hc->h_hc_index = hc_index;
 
   hc->h_tc_session_handle = session_handle (ts);
-  hc->c_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
+  hc->conn_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
 
   hc->state = HTTP_CONN_STATE_ESTABLISHED;
   hc->http_state = HTTP_STATE_WAIT_METHOD;
@@ -247,7 +247,7 @@ http_ts_connected_callback (u32 http_app_index, u32 ho_hc_index, session_t *ts,
   hc->c_thread_index = ts->thread_index;
   hc->h_tc_session_handle = session_handle (ts);
   hc->c_c_index = new_hc_index;
-  hc->c_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
+  hc->conn_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
   hc->state = HTTP_CONN_STATE_ESTABLISHED;
   hc->http_state = HTTP_STATE_WAIT_APP;
 
@@ -1192,7 +1192,7 @@ http_start_listen (u32 app_listener_index, transport_endpoint_cfg_t *tep)
   lhc->h_pa_wrk_index = sep->app_wrk_index;
   lhc->h_pa_session_handle = listen_session_get_handle (app_listener);
   lhc->c_s_index = app_listener_index;
-  lhc->c_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
+  lhc->conn_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
 
   return lhc_index;
 }

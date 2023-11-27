@@ -79,6 +79,8 @@ typedef struct svm_map_region_args_
   int gid;
 } svm_map_region_args_t;
 
+#define __WORDSIZE 64
+
 /*
  * Memory mapped to high addresses for session/vppcom/vcl/etc...
  */

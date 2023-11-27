@@ -49,6 +49,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+
+#define _WANT_UCRED
+
+#include <sys/param.h>
+#include <sys/ucred.h>
+
 #include <vppinfra/mem.h>
 #include <vppinfra/vec.h>
 #include <vppinfra/socket.h>
@@ -229,7 +235,7 @@ default_socket_recvmsg (clib_socket_t * s, void *msg, int msglen,
 #ifdef CLIB_LINUX
   char ctl[CMSG_SPACE (sizeof (int) * num_fds) +
 	   CMSG_SPACE (sizeof (struct ucred))];
-  struct ucred *cr = 0;
+//  struct ucred *cr = 0;
 #else
   char ctl[CMSG_SPACE (sizeof (int) * num_fds)];
 #endif
@@ -261,6 +267,7 @@ default_socket_recvmsg (clib_socket_t * s, void *msg, int msglen,
     {
       if (cmsg->cmsg_level == SOL_SOCKET)
 	{
+#if 0
 #ifdef CLIB_LINUX
 	  if (cmsg->cmsg_type == SCM_CREDENTIALS)
 	    {
@@ -270,6 +277,7 @@ default_socket_recvmsg (clib_socket_t * s, void *msg, int msglen,
 	      s->pid = cr->pid;
 	    }
 	  else
+#endif
 #endif
 	  if (cmsg->cmsg_type == SCM_RIGHTS)
 	    {
@@ -314,11 +322,13 @@ static const struct
     .family = AF_INET,
     .type = CLIB_SOCKET_TYPE_INET,
     .skip_prefix = 1 },
+#if 0
   { .prefix = "abstract:",
     .family = AF_UNIX,
     .type = CLIB_SOCKET_TYPE_LINUX_ABSTRACT,
     .skip_prefix = 1,
     .is_local = 1 },
+#endif
   { .prefix = "/",
     .family = AF_UNIX,
     .type = CLIB_SOCKET_TYPE_UNIX,

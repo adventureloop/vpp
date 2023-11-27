@@ -19,7 +19,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <net/if.h>
-#include <linux/if_tun.h>
+//#include <linux/if_tun.h>
+#include <net/if_tun.h>
 #include <sys/ioctl.h>
 #include <sys/eventfd.h>
 

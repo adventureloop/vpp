@@ -104,6 +104,7 @@ char *vlib_default_runtime_dir = "vpp";
 int
 main (int argc, char *argv[])
 {
+//printf("%s: entry\n", __FILE__);
   int i;
   void vl_msg_api_set_first_available_msg_id (u16);
   uword main_heap_size = (1ULL << 30);
@@ -222,6 +223,7 @@ main (int argc, char *argv[])
    * Format: heapsize <nn>[mM][gG]
    */
 
+//printf("%s:%d\n", __func__, __LINE__);
   for (i = 1; i < (argc - 1); i++)
     {
       if (!strncmp (argv[i], "plugin_path", 11))
@@ -280,6 +282,7 @@ defaulted:
   clib_mem_init (0, 1 << 20);
   unformat_init_command_line (&input, (char **) argv);
 
+//printf("%s:%d\n", __func__, __LINE__);
   while (unformat_check_input (&input) != UNFORMAT_END_OF_INPUT)
     {
       if (unformat (&input, "memory %v", &v))
@@ -319,13 +322,13 @@ defaulted:
   vec_free (v);
 
   unformat_free (&input);
-
+//printf("%s:%d\n", __func__, __LINE__);
   /* set process affinity for main thread */
   if (main_core != ~0)
     {
       CPU_ZERO (&cpuset);
       CPU_SET (main_core, &cpuset);
-      pthread_setaffinity_np (pthread_self (), sizeof (cpu_set_t), &cpuset);
+//      pthread_setaffinity_np (pthread_self (), sizeof (cpu_set_t), &cpuset);
     }
 
   /* Set up the plugin message ID allocator right now... */
@@ -334,6 +337,7 @@ defaulted:
   /* destroy temporary heap and create main one */
   clib_mem_destroy ();
 
+//printf("%s:%d\n", __func__, __LINE__);
   if ((main_heap = clib_mem_init_with_page_size (main_heap_size,
 						 main_heap_log2_page_sz)))
     {

@@ -247,6 +247,7 @@ fake_install (char *chroot_path, u8 * add_value)
 static void
 sigaction_handler (int signum, siginfo_t * i, void *notused)
 {
+#if 0
   u32 action, opaque;
 
   action = (u32) (uword) i->si_ptr;
@@ -255,6 +256,9 @@ sigaction_handler (int signum, siginfo_t * i, void *notused)
   opaque &= ~(0xF0000000);
 
   clib_warning ("signal %d, action %d, opaque %x", signum, action, opaque);
+#endif
+	// TODO
+  clib_warning ("signal %d, action <disabled>, opaque <disabled>", signum);
 }
 
 static void

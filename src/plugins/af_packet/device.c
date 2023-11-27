@@ -17,7 +17,7 @@
  *------------------------------------------------------------------
  */
 
-#include <linux/if_packet.h>
+//#include <linux/if_packet.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>

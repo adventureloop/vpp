@@ -20,7 +20,8 @@
 #ifndef included_punt_h
 #define included_punt_h
 
-#include <linux/un.h>
+//#include <linux/un.h>
+#include <sys/un.h>
 #include <stdbool.h>
 #include <vnet/ip/ip.h>
 

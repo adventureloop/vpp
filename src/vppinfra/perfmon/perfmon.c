@@ -12,6 +12,7 @@ clib_perfmon_main_t clib_perfmon_main;
 __clib_export clib_error_t *
 clib_perfmon_init_by_bundle_name (clib_perfmon_ctx_t *ctx, char *fmt, ...)
 {
+#if 0	// TODO
   clib_perfmon_main_t *pm = &clib_perfmon_main;
   clib_perfmon_bundle_t *b = 0;
   int group_fd = -1;
@@ -89,6 +90,8 @@ done:
 
   vec_free (bundle_name);
   return err;
+#endif
+	return 0;
 }
 
 __clib_export void

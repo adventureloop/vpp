@@ -414,7 +414,7 @@ typedef struct
       u32 required_thread_index;
     } snat;
 
-    u32 unused[6];
+    u32 unused[6];	// __unsed collides with the clang attribute of the same name
   };
 } vnet_buffer_opaque_t;
 
@@ -467,7 +467,7 @@ typedef struct
   } qos;
 
   u8 loop_counter;
-  u8 __unused[5];
+  u8 unused8[5];
 
   /**
    * The L4 payload size set on input on GSO enabled interfaces

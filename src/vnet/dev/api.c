@@ -90,10 +90,9 @@ vnet_dev_api_attach (vlib_main_t *vm, vnet_dev_api_attach_args_t *args)
     }
   dev->description = dev_desc;
 
-  if (driver->registration->args)
-    for (vnet_dev_arg_t *a = driver->registration->args;
-	 a->type != VNET_DEV_ARG_END; a++)
-      vec_add1 (dev->args, *a);
+  for (vnet_dev_arg_t *a = driver->registration->args;
+       a->type != VNET_DEV_ARG_END; a++)
+    vec_add1 (dev->args, *a);
 
   if (args->args)
     {

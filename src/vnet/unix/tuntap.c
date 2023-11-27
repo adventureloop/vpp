@@ -38,8 +38,13 @@
 #include <sys/uio.h>		/* for iovec */
 #include <netinet/in.h>
 
+#if 0
 #include <linux/if_arp.h>
 #include <linux/if_tun.h>
+#else
+
+#include <net/if_tun.h>
+#endif
 
 #include <vlib/vlib.h>
 #include <vlib/unix/unix.h>
@@ -54,13 +59,14 @@
 static vnet_device_class_t tuntap_dev_class;
 static vnet_hw_interface_class_t tuntap_interface_class;
 
+#if 0
 static void tuntap_punt_frame (vlib_main_t * vm,
 			       vlib_node_runtime_t * node,
 			       vlib_frame_t * frame);
 static void tuntap_nopunt_frame (vlib_main_t * vm,
 				 vlib_node_runtime_t * node,
 				 vlib_frame_t * frame);
-
+#endif
 typedef struct
 {
   u32 sw_if_index;
@@ -406,6 +412,7 @@ VLIB_REGISTER_NODE (tuntap_rx_node,static) = {
  *
  * @return error - clib_error_t
  */
+#if 0
 static clib_error_t *
 tuntap_read_ready (clib_file_t * uf)
 {
@@ -413,6 +420,7 @@ tuntap_read_ready (clib_file_t * uf)
   vlib_node_set_interrupt_pending (vm, tuntap_rx_node.index);
   return 0;
 }
+#endif
 
 /**
  * @brief Clean up the tun/tap device
@@ -425,6 +433,7 @@ tuntap_read_ready (clib_file_t * uf)
 static clib_error_t *
 tuntap_exit (vlib_main_t * vm)
 {
+#if 0
   tuntap_main_t *tm = &tuntap_main;
   struct ifreq ifr;
   int sfd;
@@ -457,8 +466,9 @@ tuntap_exit (vlib_main_t * vm)
     close (tm->dev_net_tun_fd);
   if (sfd >= 0)
     close (sfd);
-
   return 0;
+#endif
+	return 0;
 }
 
 VLIB_MAIN_LOOP_EXIT_FUNCTION (tuntap_exit);
@@ -475,6 +485,7 @@ VLIB_MAIN_LOOP_EXIT_FUNCTION (tuntap_exit);
 static clib_error_t *
 tuntap_config (vlib_main_t * vm, unformat_input_t * input)
 {
+#if 0
   tuntap_main_t *tm = &tuntap_main;
   clib_error_t *error = 0;
   struct ifreq ifr;
@@ -671,6 +682,8 @@ done:
     }
 
   return error;
+#endif
+	return NULL;
 }
 
 VLIB_CONFIG_FUNCTION (tuntap_config, "tuntap");
@@ -693,6 +706,7 @@ tuntap_ip4_add_del_interface_address (ip4_main_t * im,
 				      u32 address_length,
 				      u32 if_address_index, u32 is_delete)
 {
+#if 0
   tuntap_main_t *tm = &tuntap_main;
   struct ifreq ifr;
   subif_address_t subif_addr, *ap;
@@ -771,6 +785,7 @@ tuntap_ip4_add_del_interface_address (ip4_main_t * im,
 
   if (ioctl (tm->dev_tap_fd, SIOCSIFFLAGS, &ifr) < 0)
     clib_unix_warning ("ioctl SIOCSIFFLAGS");
+#endif
 }
 
 /**
@@ -808,6 +823,7 @@ tuntap_ip6_add_del_interface_address (ip6_main_t * im,
 				      u32 address_length,
 				      u32 if_address_index, u32 is_delete)
 {
+#if 0
   tuntap_main_t *tm = &tuntap_main;
   struct ifreq ifr;
   struct in6_ifreq ifr6;
@@ -897,6 +913,7 @@ tuntap_ip6_add_del_interface_address (ip6_main_t * im,
       mhash_unset (&tm->subif_mhash, &subif_addr, 0 /* old value ptr */ );
       pool_put (tm->subifs, ap);
     }
+#endif
 }
 
 /**
@@ -907,6 +924,7 @@ tuntap_ip6_add_del_interface_address (ip6_main_t * im,
  * @param *frame - vlib_frame_t
  *
  */
+#if 0
 static void
 tuntap_punt_frame (vlib_main_t * vm,
 		   vlib_node_runtime_t * node, vlib_frame_t * frame)
@@ -932,6 +950,7 @@ tuntap_nopunt_frame (vlib_main_t * vm,
   vlib_buffer_free (vm, buffers, n_packets);
   vlib_frame_free (vm, frame);
 }
+#endif
 
 /* *INDENT-OFF* */
 VNET_HW_INTERFACE_CLASS (tuntap_interface_class,static) = {

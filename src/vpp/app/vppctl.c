@@ -15,7 +15,7 @@
 
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <signal.h>
 #include <termios.h>
@@ -38,7 +38,7 @@
 
 volatile int window_resized = 0;
 struct termios orig_tio;
-
+#if 0
 static void
 send_ttype (int sock_fd, int is_interactive)
 {
@@ -159,11 +159,15 @@ process_input (int sock_fd, unsigned char *rx_buf, int rx_buf_len,
     }
   return j;
 }
-
+#endif
 
 int
 main (int argc, char *argv[])
 {
+printf("This has to be implemented to work without epoll\n");
+return 0;
+
+#if 0
   struct epoll_event event;
   struct sigaction sa;
   struct termios tio;
@@ -462,6 +466,7 @@ done:
     }
 
   return 0;
+#endif  
 }
 
 /* *INDENT-ON* */

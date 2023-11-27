@@ -14,7 +14,7 @@
 export WS_ROOT=$(CURDIR)
 export BR=$(WS_ROOT)/build-root
 CCACHE_DIR?=$(BR)/.ccache
-SHELL:=/bin/bash
+SHELL:=/usr/local/bin/bash	# should use which
 GDB?=gdb
 PLATFORM?=vpp
 SAMPLE_PLUGIN?=no
@@ -39,10 +39,10 @@ unix { 									\
 	gid $(shell id -g)						\
 	$(if $(wildcard startup.vpp),"exec startup.vpp",)		\
 }									\
-$(if $(DPDK_CONFIG), "dpdk { $(DPDK_CONFIG) }",)			\
-$(if $(EXTRA_VPP_CONFIG), "$(EXTRA_VPP_CONFIG)",)			\
-$(call disable_plugins,$(DISABLED_PLUGINS))				\
-"
+" # Moved around
+#$(if $(DPDK_CONFIG), "dpdk { $(DPDK_CONFIG) }",)			\
+#$(if $(EXTRA_VPP_CONFIG), "$(EXTRA_VPP_CONFIG)",)			\
+#$(call disable_plugins,$(DISABLED_PLUGINS))				\
 
 GDB_ARGS= -ex "handle SIGUSR1 noprint nostop"
 
@@ -196,6 +196,8 @@ RPM_SUSE_DEPENDS += $(RPM_SUSE_BUILDTOOLS_DEPS) $(RPM_SUSE_DEVEL_DEPS) $(RPM_SUS
 ifneq ($(wildcard $(STARTUP_DIR)/startup.conf),)
         STARTUP_CONF ?= $(STARTUP_DIR)/startup.conf
 endif
+
+FBSD_DEPENDS = py39-ply gmake gsed
 
 ifeq ($(findstring y,$(UNATTENDED)),y)
 DEBIAN_FRONTEND=noninteractive
@@ -356,6 +358,8 @@ endif
 else ifeq ($(filter opensuse-leap-15.3 opensuse-leap-15.4 ,$(OS_ID)-$(OS_VERSION_ID)),$(OS_ID)-$(OS_VERSION_ID))
 	@sudo -E zypper refresh
 	@sudo -E zypper install  -y $(RPM_SUSE_DEPENDS)
+else ifeq ($(OS_ID),freebsd)
+	@echo "Need to install packages for freebsd and populate $(BR)/.dep.ok"
 else
 	$(error "This option currently works only on Ubuntu, Debian, RHEL, CentOS or openSUSE-leap systems")
 endif
@@ -365,7 +369,7 @@ endif
 install-deps: install-dep
 
 define make
-	@make -C $(BR) PLATFORM=$(PLATFORM) TAG=$(1) $(2)
+	@gmake -C $(BR) PLATFORM=$(PLATFORM) TAG=$(1) $(2)
 endef
 
 $(BR)/scripts/.version:
@@ -660,15 +664,15 @@ pkg-deb-debug:
 
 .PHONY: pkg-rpm
 pkg-rpm: dist
-	make -C extras/rpm
+	@make -C extras/rpm
 
 .PHONY: pkg-srpm
 pkg-srpm: dist
-	make -C extras/rpm srpm
+	@make -C extras/rpm srpm
 
 .PHONY: install-ext-deps
 install-ext-deps:
-	make -C build/external install-$(PKG)
+	@make -C build/external install-$(PKG)
 
 .PHONY: install-ext-dep
 install-ext-dep: install-ext-deps
@@ -808,4 +812,4 @@ endif
 
 .PHONY: check-dpdk-mlx
 check-dpdk-mlx:
-	@[ $$(make -sC build/external dpdk-show-DPDK_MLX_DEFAULT) = y ]
+	@[ $$(gmake -sC build/external dpdk-show-DPDK_MLX_DEFAULT) = y ]

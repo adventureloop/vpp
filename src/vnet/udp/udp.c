@@ -194,7 +194,7 @@ udp_session_bind (u32 session_index, transport_endpoint_cfg_t *lcl)
   if (lcl_ext->transport_flags & TRANSPORT_CFG_F_CONNECTED)
     listener->flags |= UDP_CONN_F_CONNECTED;
   else
-    listener->c_flags |= TRANSPORT_CONNECTION_F_CLESS;
+    listener->conn_flags |= TRANSPORT_CONNECTION_F_CLESS;
   clib_spinlock_init (&listener->rx_lock);
   if (!um->csum_offload)
     listener->cfg_flags |= UDP_CFG_F_NO_CSUM_OFFLOAD;
@@ -441,7 +441,7 @@ udp_open_connection (transport_endpoint_cfg_t * rmt)
   else
     {
       clib_spinlock_init (&uc->rx_lock);
-      uc->c_flags |= TRANSPORT_CONNECTION_F_CLESS;
+      uc->conn_flags |= TRANSPORT_CONNECTION_F_CLESS;
     }
   if (!um->csum_offload)
     uc->cfg_flags |= UDP_CFG_F_NO_CSUM_OFFLOAD;

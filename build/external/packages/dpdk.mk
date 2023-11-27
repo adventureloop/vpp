@@ -31,12 +31,13 @@ dpdk_tarball_md5sum_21.11    := 58660bbbe9e95abce86e47692b196555
 dpdk_tarball_md5sum          := $(dpdk_tarball_md5sum_$(dpdk_version))
 dpdk_url                     := $(dpdk_base_url)/$(dpdk_tarball)
 dpdk_tarball_strip_dirs      := 1
-dpdk_depends		     := rdma-core $(if $(ARCH_X86_64), ipsec-mb)
+#dpdk_depends		     := rdma-core $(if $(ARCH_X86_64), ipsec-mb)
+dpdk_depends		     := $(if $(ARCH_X86_64), ipsec-mb)
 
-DPDK_MLX_DEFAULT             := $(shell if grep -q "rdma=$(rdma-core_version) dpdk=$(dpdk_version)" mlx_rdma_dpdk_matrix.txt; then echo 'y'; else echo 'n'; fi)
-DPDK_MLX4_PMD                ?= $(DPDK_MLX_DEFAULT)
-DPDK_MLX5_PMD                ?= $(DPDK_MLX_DEFAULT)
-DPDK_MLX5_COMMON_PMD         ?= $(DPDK_MLX_DEFAULT)
+#DPDK_MLX_DEFAULT             := $(shell if grep -q "rdma=$(rdma-core_version) dpdk=$(dpdk_version)" mlx_rdma_dpdk_matrix.txt; then echo 'y'; else echo 'n'; fi)
+#DPDK_MLX4_PMD                ?= $(DPDK_MLX_DEFAULT)
+#DPDK_MLX5_PMD                ?= $(DPDK_MLX_DEFAULT)
+#DPDK_MLX5_COMMON_PMD         ?= $(DPDK_MLX_DEFAULT)
 # Debug or release
 
 DPDK_BUILD_TYPE:=release
@@ -136,10 +137,10 @@ HASH := \#
 # post-meson-setup snippet to alter rte_build_config.h
 define dpdk_config
 if grep -q RTE_$(1) $(dpdk_src_dir)/config/rte_config.h ; then	\
-sed -i -e 's/$(HASH)define RTE_$(1).*/$(HASH)define RTE_$(1) $(DPDK_$(1))/' \
+gsed -i -e 's/$(HASH)define RTE_$(1).*/$(HASH)define RTE_$(1) $(DPDK_$(1))/' \
 	$(dpdk_src_dir)/config/rte_config.h; \
 elif grep -q RTE_$(1) $(dpdk_build_dir)/rte_build_config.h ; then \
-sed -i -e 's/$(HASH)define RTE_$(1).*/$(HASH)define RTE_$(1) $(DPDK_$(1))/' \
+gsed -i -e 's/$(HASH)define RTE_$(1).*/$(HASH)define RTE_$(1) $(DPDK_$(1))/' \
 	$(dpdk_build_dir)/rte_build_config.h; \
 else \
 echo '$(HASH)define RTE_$(1) $(DPDK_$(1))' \
@@ -155,7 +156,7 @@ if [[ "$(DPDK_$(1))" == "y" ]]; then \
           >> $(dpdk_build_dir)/rte_build_config.h ; \
     fi; \
 elif [[ "$(DPDK_$(1))" == "n" ]]; then \
-    sed -i '/$(HASH)define RTE_$(1) .*/d' $(dpdk_build_dir)/rte_build_config.h \
+    gsed -i '/$(HASH)define RTE_$(1) .*/d' $(dpdk_build_dir)/rte_build_config.h \
       $(dpdk_src_dir)/config/rte_config.h ; \
 fi
 endef

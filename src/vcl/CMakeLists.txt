@@ -14,40 +14,40 @@
 ##############################################################################
 # vppcom shared library
 ##############################################################################
-add_vpp_library(vppcom
-  SOURCES
-  vppcom.c
-  vcl_bapi.c
-  vcl_cfg.c
-  vcl_private.c
-  vcl_locked.c
-  vcl_sapi.c
+#add_vpp_library(vppcom
+#  SOURCES
+#  vppcom.c
+#  vcl_bapi.c
+#  vcl_cfg.c
+#  vcl_private.c
+#  vcl_locked.c
+#  vcl_sapi.c
+#
+#  LINK_LIBRARIES
+#  vppinfra svm vlibmemoryclient rt pthread
+#
+#  DEPENDS
+#  api_headers
+#)
 
-  LINK_LIBRARIES
-  vppinfra svm vlibmemoryclient rt pthread
+#option(LDP_HAS_GNU_SOURCE "LDP configured to use _GNU_SOURCE" ON)
+#if (LDP_HAS_GNU_SOURCE)
+#  add_compile_definitions(HAVE_GNU_SOURCE)
+#endif(LDP_HAS_GNU_SOURCE)
 
-  DEPENDS
-  api_headers
-)
-
-option(LDP_HAS_GNU_SOURCE "LDP configured to use _GNU_SOURCE" ON)
-if (LDP_HAS_GNU_SOURCE)
-  add_compile_definitions(HAVE_GNU_SOURCE)
-endif(LDP_HAS_GNU_SOURCE)
-
-add_vpp_library(vcl_ldpreload
-  SOURCES
-  ldp_socket_wrapper.c
-  ldp.c
-
-  LINK_LIBRARIES
-  vppinfra svm vlibmemoryclient rt pthread vppcom dl
-)
+#add_vpp_library(vcl_ldpreload
+#  SOURCES
+#  ldp_socket_wrapper.c
+#  ldp.c
+#
+#  LINK_LIBRARIES
+#  vppinfra svm vlibmemoryclient rt pthread vppcom dl 
+#)
 
 add_vpp_headers(vcl
   ldp.h
   ldp_glibc_socket.h
-  vppcom.h
+#  vppcom.h
   vcl_locked.h
   ldp_socket_wrapper.h
 )

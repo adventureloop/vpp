@@ -120,11 +120,12 @@ add_vpp_executable(vpp_get_stats
   DEPENDS api_headers
 )
 
-add_vpp_executable(vpp_prometheus_export
-  SOURCES app/vpp_prometheus_export.c
-  LINK_LIBRARIES vppapiclient vppinfra svm vlibmemoryclient
-  DEPENDS api_headers
-)
+#
+#add_vpp_executable(vpp_prometheus_export
+#  SOURCES app/vpp_prometheus_export.c
+#  LINK_LIBRARIES vppapiclient vppinfra svm vlibmemoryclient
+#  DEPENDS api_headers
+#)
 
 ##############################################################################
 # vppmem_preload library

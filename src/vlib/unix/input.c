@@ -44,7 +44,7 @@
 #include <vppinfra/tw_timer_1t_3w_1024sl_ov.h>
 
 /* FIXME autoconf */
-#define HAVE_LINUX_EPOLL
+//#define HAVE_LINUX_EPOLL
 
 #ifdef HAVE_LINUX_EPOLL
 

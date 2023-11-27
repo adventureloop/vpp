@@ -21,16 +21,36 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <net/if.h>
-#include <linux/if_tun.h>
+#include <net/if_tun.h>
+//#include <linux/if_tun.h>
 #include <sys/ioctl.h>
-#include <linux/ethtool.h>
-#include <linux/sockios.h>
 #include <sys/eventfd.h>
 #include <net/if_arp.h>
 #include <limits.h>
 
+#if 0
+#include <linux/ethtool.h>
+#include <linux/sockios.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+#else
+#include <netlink/netlink.h>
+#include <netlink/netlink_route.h>
+
+#define IFF_NO_PI 0
+#define IFF_VNET_HDR 0
+#define IFF_TUN 0
+#define IFF_TAP 0
+#define IFF_VNET_HDR 0
+#define IFF_MULTI_QUEUE 0
+#define IFF_MULTI_QUEUE 0
+#define TUN_F_CSUM 0
+#define TUN_F_TSO4 0
+#define TUN_F_TSO6 0
+#define TUN_F_CSUM 0
+#define TUNSETIFF 0
+
+#endif
 
 #include <vlib/vlib.h>
 #include <vlib/physmem.h>
@@ -92,7 +112,7 @@ tap_free (vlib_main_t * vm, virtio_if_t * vif)
 {
   virtio_main_t *mm = &virtio_main;
   tap_main_t *tm = &tap_main;
-  clib_error_t *err = 0;
+//  clib_error_t *err = 0;
   int i;
 
   virtio_pre_input_node_disable (vm, vif);
@@ -106,12 +126,14 @@ tap_free (vlib_main_t * vm, virtio_if_t * vif)
     virtio_vring_free_tx (vm, vif, TX_QUEUE (i));
   /* *INDENT-ON* */
 
+#if 0
   if (vif->tap_fds)
     {
       _IOCTL (vif->tap_fds[0], TUNSETPERSIST, (void *) (uintptr_t) 0);
       tap_log_dbg (vif, "TUNSETPERSIST: unset");
     }
-error:
+#endif
+//error:
   vec_foreach_index (i, vif->tap_fds) close (vif->tap_fds[i]);
 
   vec_free (vif->tap_fds);
@@ -142,16 +164,19 @@ tap_create_if (vlib_main_t * vm, tap_create_if_args_t * args)
   int i, num_vhost_queues;
   int old_netns_fd = -1;
   struct ifreq ifr = {.ifr_flags = IFF_NO_PI | IFF_VNET_HDR };
+#if 0
   struct ifreq get_ifr = {.ifr_flags = 0 };
   size_t hdrsz;
+#endif
   vhost_memory_t *vhost_mem = 0;
   virtio_if_t *vif = 0;
   clib_error_t *err = 0;
-  unsigned int tap_features;
-  int tfd = -1, qfd = -1, vfd = -1, nfd = -1;
+//  unsigned int tap_features;
+//  int tfd = -1, qfd = -1, vfd = -1, nfd = -1;
+  int tfd = -1, vfd = -1, nfd = -1;
   char *host_if_name = 0;
-  unsigned int offload = 0;
-  int sndbuf = 0;
+//  unsigned int offload = 0;
+//  int sndbuf = 0;
 
   if (args->id != ~0)
     {
@@ -189,13 +214,13 @@ tap_create_if (vlib_main_t * vm, tap_create_if_args_t * args)
        * To avoid xdp data path in tun driver, sndbuf value should
        * be < INT_MAX.
        */
-      sndbuf = INT_MAX - 1;
+//      sndbuf = INT_MAX - 1;
     }
   else
     {
       vif->type = VIRTIO_IF_TYPE_TAP;
       ifr.ifr_flags |= IFF_TAP;
-      sndbuf = INT_MAX;
+ //     sndbuf = INT_MAX;
     }
 
   vif->dev_instance = vif - vim->interfaces;
@@ -249,7 +274,7 @@ tap_create_if (vlib_main_t * vm, tap_create_if_args_t * args)
     }
   vec_add1 (vif->tap_fds, tfd);
   tap_log_dbg (vif, "open tap fd %d", tfd);
-
+#if 0
   _IOCTL (tfd, TUNGETFEATURES, &tap_features);
   tap_log_dbg (vif, "TUNGETFEATURES: features 0x%lx", tap_features);
   if ((tap_features & IFF_VNET_HDR) == 0)
@@ -322,7 +347,6 @@ tap_create_if (vlib_main_t * vm, tap_create_if_args_t * args)
 	  goto error;
 	}
     }
-
   /* create additional queues on the linux side.
    * we create as many linux queue pairs as we have rx queues
    */
@@ -361,6 +385,7 @@ tap_create_if (vlib_main_t * vm, tap_create_if_args_t * args)
 	  goto error;
 	}
     }
+#endif
 
   /* open as many vhost-net fds as required and set ownership */
   num_vhost_queues = clib_max (vif->num_rxqs, vif->num_txqs);
@@ -780,7 +805,7 @@ tap_csum_offload_enable_disable (vlib_main_t * vm, u32 sw_if_index,
   vnet_hw_interface_t *hw;
   vnet_hw_if_caps_change_t cc;
   clib_error_t *err = 0;
-  int i = 0;
+//  int i = 0;
 
   hw = vnet_get_sup_hw_interface_api_visible_or_null (vnm, sw_if_index);
 
@@ -789,6 +814,7 @@ tap_csum_offload_enable_disable (vlib_main_t * vm, u32 sw_if_index,
 
   vif = pool_elt_at_index (mm->interfaces, hw->dev_instance);
 
+#if 0
   const unsigned int csum_offload_on = TUN_F_CSUM;
   const unsigned int csum_offload_off = 0;
   unsigned int offload = enable_disable ? csum_offload_on : csum_offload_off;
@@ -796,7 +822,7 @@ tap_csum_offload_enable_disable (vlib_main_t * vm, u32 sw_if_index,
     _IOCTL (vif->tap_fds[i], TUNSETOFFLOAD, offload);
   vif->gso_enabled = 0;
   vif->packet_coalesce = 0;
-
+#endif
   cc.mask = VNET_HW_IF_CAP_TCP_GSO | VNET_HW_IF_CAP_L4_TX_CKSUM;
   if (enable_disable)
     {
@@ -810,7 +836,7 @@ tap_csum_offload_enable_disable (vlib_main_t * vm, u32 sw_if_index,
     }
   vnet_hw_if_change_caps (vnm, vif->hw_if_index, &cc);
 
-error:
+//error:
   if (err)
     {
       clib_warning ("Error %s checksum offload on sw_if_index %d",
@@ -830,7 +856,7 @@ tap_gso_enable_disable (vlib_main_t * vm, u32 sw_if_index, int enable_disable,
   vnet_hw_interface_t *hw;
   vnet_hw_if_caps_change_t cc;
   clib_error_t *err = 0;
-  int i = 0;
+//  int i = 0;
 
   hw = vnet_get_sup_hw_interface_api_visible_or_null (vnm, sw_if_index);
 
@@ -838,7 +864,7 @@ tap_gso_enable_disable (vlib_main_t * vm, u32 sw_if_index, int enable_disable,
     return VNET_API_ERROR_INVALID_SW_IF_INDEX;
 
   vif = pool_elt_at_index (mm->interfaces, hw->dev_instance);
-
+#if 0
   const unsigned int gso_on = TUN_F_CSUM | TUN_F_TSO4 | TUN_F_TSO6;
   const unsigned int gso_off = 0;
   unsigned int offload = enable_disable ? gso_on : gso_off;
@@ -846,7 +872,7 @@ tap_gso_enable_disable (vlib_main_t * vm, u32 sw_if_index, int enable_disable,
     _IOCTL (vif->tap_fds[i], TUNSETOFFLOAD, offload);
 
   cc.mask = VNET_HW_IF_CAP_TCP_GSO | VNET_HW_IF_CAP_L4_TX_CKSUM;
-
+#endif
   if (enable_disable)
     {
       cc.val = cc.mask;
@@ -864,7 +890,7 @@ tap_gso_enable_disable (vlib_main_t * vm, u32 sw_if_index, int enable_disable,
     }
   vnet_hw_if_change_caps (vnm, vif->hw_if_index, &cc);
 
-error:
+//error:
   if (err)
     {
       clib_warning ("Error %s gso on sw_if_index %d",
@@ -994,6 +1020,7 @@ tap_mtu_config (vlib_main_t * vm, unformat_input_t * input)
 int
 tap_set_speed (u32 hw_if_index, u32 speed)
 {
+#if 0
   vnet_main_t *vnm = vnet_get_main ();
   vnet_hw_interface_t *hi = vnet_get_hw_interface (vnm, hw_if_index);
   virtio_main_t *mm = &virtio_main;
@@ -1065,6 +1092,8 @@ done:
     close (ctl_fd);
 
   return ret;
+#endif
+	return 0;
 }
 
 /* tap { host-mtu <size> } configuration. */

@@ -269,7 +269,6 @@ clib_mem_init_internal (void *base, uword size,
   clib_mem_heap_t *h;
 
   clib_mem_main_init ();
-
   h = clib_mem_create_heap_internal (base, size, log2_page_sz,
 				     1 /*is_locked */ , "main heap");
 

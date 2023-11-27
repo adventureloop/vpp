@@ -12,10 +12,10 @@
 # limitations under the License.
 
 # Scripts require non-POSIX parts of bash
-SHELL := /bin/bash
+SHELL := /usr/local/bin/bash
 
 DL_CACHE_DIR = $(HOME)/Downloads
-MAKE ?= make
+MAKE ?= gmake
 MAKE_ARGS ?= -j
 BUILD_DIR        ?= $(CURDIR)/_build
 INSTALL_DIR      ?= $(CURDIR)/_install
@@ -39,19 +39,19 @@ ARCH_X86_64=$(filter x86_64,$(shell uname -m))
 include packages.mk
 include packages/ipsec-mb.mk
 include packages/quicly.mk
-include packages/rdma-core.mk
+#include packages/rdma-core.mk
 include packages/dpdk.mk
-include packages/xdp-tools.mk
+#include packages/xdp-tools.mk
 
 .PHONY: clean
 clean:
 	@rm -rf $(B) $(I)
 
 .PHONY: install
-install: $(if $(ARCH_X86_64), ipsec-mb-install) dpdk-install rdma-core-install quicly-install xdp-tools-install
+install: $(if $(ARCH_X86_64), ipsec-mb-install) dpdk-install  quicly-install #rdma-core-install xdp-tools-install
 
 .PHONY: config
-config: $(if $(ARCH_X86_64), ipsec-mb-config) dpdk-config rdma-core-config quicly-build
+config: $(if $(ARCH_X86_64), ipsec-mb-config) dpdk-config  quicly-build # rdma-core-config
 
 ##############################################################################
 # .deb packaging
@@ -157,17 +157,17 @@ ifeq ($(INSTALLED_VER)$(INSTALLED_RPM_VER),)
 	@echo "development package by invoking 'make install-ext-deps'"
 	@echo "from the top level directory"
 	@echo "=========================================================="
-	make config
+	gmake config
 else
 ifneq ($(INSTALLED_VER),)
 	make check-deb
 endif
 ifneq ($(INSTALLED_RPM_VER),)
-	make check-rpm
+	gmake check-rpm
 endif
 endif
 
 ebuild-install:
 ifeq ($(INSTALLED_VER)$(INSTALLED_RPM_VER),)
-	make install
+	gmake install
 endif

@@ -252,17 +252,25 @@ format_cpu_flags (u8 *s, va_list *args)
 __clib_export u32
 clib_get_current_cpu_id ()
 {
+#if 0	// TODO
   unsigned cpu, node;
   syscall (__NR_getcpu, &cpu, &node, 0);
   return cpu;
+#else
+	return 0;
+#endif
 }
 
 __clib_export u32
 clib_get_current_numa_node ()
 {
+#if 0	// TODO
   unsigned cpu, node;
   syscall (__NR_getcpu, &cpu, &node, 0);
   return node;
+#else
+	return 0;
+#endif
 }
 
 __clib_export u8 *

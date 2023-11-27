@@ -11,6 +11,26 @@
 #include <linux/perf_event.h>
 #endif
 
+/* TODO */
+#define PERF_EVENT_IOC_RESET 0
+#define PERF_EVENT_IOC_DISABLE 0
+#define PERF_EVENT_IOC_ENABLE 0
+#define PERF_IOC_FLAG_GROUP 0
+#define __NR_ioctl 0
+
+#define PERF_TYPE_RAW 0
+#define PERF_TYPE_HARDWARE 0
+#define PERF_COUNT_HW_BRANCH_MISSES 0
+#define PERF_COUNT_HW_BRANCH_INSTRUCTIONS 0
+#define PERF_COUNT_HW_INSTRUCTIONS 0
+#define PERF_COUNT_HW_REF_CPU_CYCLES 0
+#define PERF_COUNT_HW_CPU_CYCLES 0
+
+#define PERF_FORMAT_GROUP 0
+#define PERF_FORMAT_TOTAL_TIME_ENABLED 0
+#define PERF_FORMAT_TOTAL_TIME_RUNNING 0
+#define __NR_perf_event_open 0
+
 #define CLIB_PERFMON_MAX_EVENTS 7
 typedef struct
 {
