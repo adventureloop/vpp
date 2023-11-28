@@ -503,15 +503,15 @@ papi-wipe: test-wipe-papi
 
 .PHONY: test-wipe-papi
 test-wipe-papi:
-	@make -C test wipe-papi
+	@gmake -C test wipe-papi
 
 .PHONY: test-help
 test-help:
-	@make -C test help
+	@gmake -C test help
 
 .PHONY: test-wipe
 test-wipe:
-	@make -C test wipe
+	@gmake -C test wipe
 
 .PHONY: test-shell
 test-shell:
