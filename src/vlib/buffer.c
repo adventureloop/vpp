@@ -718,7 +718,6 @@ vlib_buffer_main_init_numa_node (struct vlib_main_t *vm, u32 numa_node,
 		     "numa[%u] falling back to non-hugepage backed "
 		     "buffer pool (%U)", numa_node, format_clib_error, error);
       clib_error_free (error);
-
       error = vlib_buffer_main_init_numa_alloc (vm, numa_node,
 						&physmem_map_index,
 						CLIB_MEM_PAGE_SZ_DEFAULT,

@@ -1960,6 +1960,7 @@ vlib_main (vlib_main_t * volatile vm, unformat_input_t * input)
       goto done;
     }
 
+printf("%s:%d\n", __func__, __LINE__);    
   if ((error = map_api_segment_init (vm)))
     {
       clib_error_report (error);

@@ -66,7 +66,8 @@
 #endif
 
 #ifndef MAP_FIXED_NOREPLACE
-#define MAP_FIXED_NOREPLACE 0x100000
+//#define MAP_FIXED_NOREPLACE 0x100000
+#define MAP_FIXED_NOREPLACE MAP_FIXED	// from ntq
 #endif
 
 static void
@@ -85,12 +86,10 @@ map_unlock ()
 void
 clib_mem_main_init (void)
 {
-#if 1
   clib_mem_main_t *mm = &clib_mem_main;
   long sysconf_page_size;
   uword page_size;
   void *va;
-//  int fd;
 
   if (mm->log2_page_sz != CLIB_MEM_PAGE_SZ_UNKNOWN)
     return;
@@ -125,7 +124,6 @@ clib_mem_main_init (void)
 #endif
 done:
   munmap (va, page_size);
-#endif
 }
 
 __clib_export u64
@@ -539,7 +537,6 @@ __clib_export void
 clib_mem_get_page_stats (void *start, clib_mem_page_sz_t log2_page_size,
 			 uword n_pages, clib_mem_page_stats_t * stats)
 {
-#if 0
   int i, *status = 0;
   void **ptr = 0;
 
@@ -555,6 +552,7 @@ clib_mem_get_page_stats (void *start, clib_mem_page_sz_t log2_page_size,
   stats->total = n_pages;
   stats->log2_page_sz = log2_page_size;
 
+#if 0
   if (syscall (__NR_move_pages, 0, n_pages, ptr, 0, status, 0) != 0)
     {
       stats->unknown = n_pages;
@@ -573,11 +571,19 @@ clib_mem_get_page_stats (void *start, clib_mem_page_sz_t log2_page_size,
       else
 	stats->unknown++;
     }
-
+#else
+/* XXX-THJ: FreeBSD doesn't have the move_pages syscall the linux code
+ * uses. The neoteq branch implements this call as a nop and sets
+ * stats->unknown like this and then hits the done label.
+ *
+ * Rather than hide that in a compat file, do it here
+ */
+      stats->unknown = n_pages;
+      goto done;
+#endif
 done:
   vec_free (status);
   vec_free (ptr);
-#endif
 }
 
 
@@ -650,6 +656,7 @@ clib_mem_set_numa_affinity (u8 numa_node, int force)
 
   bmp = clib_bitmap_set (bmp, numa_node, 1);
 
+
   rv = syscall (__NR_set_mempolicy, force ? MPOL_BIND : MPOL_PREFERRED, bmp,
 		vec_len (bmp) * sizeof (bmp[0]) * 8 + 1);
 
@@ -664,7 +671,7 @@ clib_mem_set_numa_affinity (u8 numa_node, int force)
 
   return 0;
 #endif
-  return 0;
+      return CLIB_MEM_ERROR;
 }
 
 __clib_export int
@@ -681,7 +688,7 @@ clib_mem_set_default_numa_affinity ()
     }
   return 0;
 #endif
-return 0;
+      return 0;
 }
 
 /*

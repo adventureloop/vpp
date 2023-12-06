@@ -19,6 +19,7 @@
 
 #include <arpa/inet.h>
 #include <sys/epoll.h>
+#include <libepoll-shim/sys/epoll.h>	// XXX-THJ from ntq
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>

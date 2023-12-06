@@ -548,10 +548,11 @@ svm_region_init_mapped_region (svm_map_region_args_t * a, svm_region_t * rp)
 void *
 svm_map_region (svm_map_region_args_t * a)
 {
+printf("%s:%d\n", __func__, __LINE__);
   int svm_fd;
   svm_region_t *rp;
   int deadman = 0;
-  u8 junk = 0;
+//  u8 junk = 0;
   void *oldheap;
   int rv;
   int pid_holding_region_lock;
@@ -574,6 +575,7 @@ svm_map_region (svm_map_region_args_t * a)
 
   if (svm_fd >= 0)
     {
+printf("%s:%d opened %s as svm_fd %d\n", __func__, __LINE__, shm_name, svm_fd);
       if (fchmod (svm_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) < 0)
 	clib_unix_warning ("segment chmod");
       /* This turns out to fail harmlessly if the client starts first */
@@ -582,6 +584,15 @@ svm_map_region (svm_map_region_args_t * a)
 
       vec_free (shm_name);
 
+#if defined(__FreeBSD__)	// XXX-THJ from ntq
+      if (ftruncate(svm_fd, a->size) < 0)
+        {
+          perror(NULL);
+          clib_warning ("ftruncate region size");
+          close (svm_fd);
+          return (0);
+        }
+#else
       if (lseek (svm_fd, a->size, SEEK_SET) == (off_t) - 1)
 	{
 	  clib_warning ("seek region size");
@@ -594,7 +605,7 @@ svm_map_region (svm_map_region_args_t * a)
 	  close (svm_fd);
 	  return (0);
 	}
-
+#endif	/* __FreeBSD__ */
       rp = mmap (uword_to_pointer (a->baseva, void *), a->size,
 		 PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, svm_fd, 0);
 
@@ -609,10 +620,12 @@ svm_map_region (svm_map_region_args_t * a)
 
       svm_region_init_mapped_region (a, rp);
 
+printf("%s:%d\n", __func__, __LINE__);
       return ((void *) rp);
     }
   else
     {
+printf("%s:%d\n", __func__, __LINE__);
       svm_fd = shm_open ((char *) shm_name, O_RDWR, 0777);
 
       vec_free (shm_name);
@@ -627,9 +640,14 @@ svm_map_region (svm_map_region_args_t * a)
       if (fchown (svm_fd, a->uid, a->gid) < 0)
 	clib_unix_warning ("segment chown [ok if client starts first]");
 
+printf("%s:%d\n", __func__, __LINE__);
       time_left = 20;
       while (1)
 	{
+
+printf("%s:%d waiting for shm object %s, this might need to be manually removed\n",
+__func__, __LINE__, shm_name);
+printf("%s:%d svm_fd %d time left %d\n", __func__, __LINE__, svm_fd, time_left);
 	  if (0 != fstat (svm_fd, &stat))
 	    {
 	      clib_warning ("fstat failed: %d", errno);
@@ -653,11 +671,13 @@ svm_map_region (svm_map_region_args_t * a)
 	  time_left--;
 	}
 
+printf("%s:%d\n", __func__, __LINE__);
       rp = mmap (0, MMAP_PAGESIZE,
 		 PROT_READ | PROT_WRITE, MAP_SHARED, svm_fd, 0);
 
       if (rp == (svm_region_t *) MAP_FAILED)
 	{
+printf("%s:%d\n", __func__, __LINE__);
 	  close (svm_fd);
 	  clib_warning ("mmap");
 	  return (0);
@@ -673,6 +693,7 @@ svm_map_region (svm_map_region_args_t * a)
 	{
 	  sleep (1);
 	}
+printf("%s:%d\n", __func__, __LINE__);
 
       /*
        * <bleep>-ed?
@@ -688,6 +709,7 @@ svm_map_region (svm_map_region_args_t * a)
       a->baseva = rp->virtual_base;
       a->size = rp->virtual_size;
       munmap (rp, MMAP_PAGESIZE);
+printf("%s:%d\n", __func__, __LINE__);
 
       rp = (void *) mmap (uword_to_pointer (a->baseva, void *), a->size,
 			  PROT_READ | PROT_WRITE,
@@ -708,6 +730,7 @@ svm_map_region (svm_map_region_args_t * a)
 	  clib_warning ("mmap botch");
 	}
 
+printf("%s:%d\n", __func__, __LINE__);
       /*
        * Try to fix the region mutex if it is held by
        * a dead process
@@ -729,6 +752,7 @@ svm_map_region (svm_map_region_args_t * a)
 	  dead_region_recovery = 1;
 	}
 
+printf("%s:%d\n", __func__, __LINE__);
       if (dead_region_recovery)
 	clib_warning ("recovery: attempt to re-lock region");
 
@@ -752,9 +776,11 @@ svm_map_region (svm_map_region_args_t * a)
 
       svm_pop_heap (oldheap);
 
+printf("%s:%d\n", __func__, __LINE__);
       return ((void *) rp);
 
     }
+printf("%s:%d\n", __func__, __LINE__);
   return 0;			/* NOTREACHED *///NOSONAR
 }
 
@@ -776,8 +802,10 @@ svm_region_init_internal (svm_map_region_args_t * a)
   uword randomize_baseva;
 
   /* guard against klutz calls */
-  if (root_rp)
+  if (root_rp) {
+printf("%s:%d svn_region_init_internal failed\n", __func__, __LINE__);
     return -1;
+  }
 
   root_rp_refcount++;
 
@@ -792,8 +820,10 @@ svm_region_init_internal (svm_map_region_args_t * a)
   a->baseva += randomize_baseva;
 
   rp = svm_map_region (a);
-  if (!rp)
+  if (!rp) {
+printf("%s:%d svn_region_init_internal failed\n", __func__, __LINE__);
     return -1;
+  } 
 
   region_lock (rp, 3);
 

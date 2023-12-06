@@ -45,6 +45,22 @@ install(
   COMPONENT vpp-dev
 )
 
+# XXX-THJ: from ntq
+##############################################################################
+# FreeBSD - use epoll-shim
+##############################################################################
+set(FREEBSD_LIBS "")
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
+  find_path(EPOLL_SHIM_INCLUDE_DIR NAMES libepoll-shim/sys/epoll.h HINTS /usr/local/include)
+  find_library(EPOLL_SHIM_LIB NAMES epoll-shim HINTS /usr/local/lib)
+  
+  if(EPOLL_SHIM_INCLUDE_DIR AND EPOLL_SHIM_LIB)
+    message(STATUS "Found epoll-shim in ${EPOLL_SHIM_INCLUDE_DIR}")
+    include_directories(${EPOLL_SHIM_INCLUDE_DIR})
+    string(JOIN " " FREEBSD_LIBS "${EPOLL_SHIM_LIB}")
+  endif()
+endif()
+
 ##############################################################################
 # vlib shared library
 ##############################################################################
@@ -139,7 +155,8 @@ add_vpp_library(vlib
   API_FILES
   pci/pci_types.api
 
-  LINK_LIBRARIES vppinfra svm ${CMAKE_DL_LIBS}
+#  LINK_LIBRARIES vppinfra svm ${CMAKE_DL_LIBS}
+  LINK_LIBRARIES vppinfra svm ${CMAKE_DL_LIBS} ${FREEBSD_LIBS}
 
   DEPENDS api_headers
 )

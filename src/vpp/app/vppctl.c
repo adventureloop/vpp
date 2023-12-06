@@ -15,7 +15,11 @@
 
 #include <sys/socket.h>
 #include <sys/un.h>
-//#include <sys/epoll.h>
+#ifdef __FreeBSD__
+#include <libepoll-shim/sys/epoll.h>
+#else
+#include <sys/epoll.h>
+#endif	/* __FreeBSD__ */
 #include <sys/ioctl.h>
 #include <signal.h>
 #include <termios.h>

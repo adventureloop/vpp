@@ -53,7 +53,7 @@ vlib_physmem_shared_map_create (vlib_main_t * vm, char *name, uword size,
 
   va = clib_pmalloc_create_shared_arena (pm, name, size, log2_page_sz,
 					 numa_node);
-
+printf("%s:%d clib_pmalloc_create_shared_arena returned %p (va, which is an error)\n", __func__, __LINE__, va);
   if (va == 0)
     return clib_error_return (0, "%U", format_clib_error,
 			      clib_pmalloc_last_error (pm));

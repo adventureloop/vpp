@@ -44,11 +44,16 @@
 #include <vppinfra/tw_timer_1t_3w_1024sl_ov.h>
 
 /* FIXME autoconf */
-//#define HAVE_LINUX_EPOLL
+#define HAVE_LINUX_EPOLL
 
 #ifdef HAVE_LINUX_EPOLL
 
+// XXX-THJ: from ntq
+#ifdef __FreeBSD__
+#include <libepoll-shim/sys/epoll.h>
+#else
 #include <sys/epoll.h>
+#endif	/* __FreeBSD__ */
 
 typedef struct
 {
