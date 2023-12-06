@@ -43,11 +43,14 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/eventfd.h>
+
+#include <sys/pciio.h>
+
 #include <fcntl.h>
 #include <dirent.h>
-#include <sys/ioctl.h>
 #include <net/if.h>
-#include <sys/eventfd.h>
 
 #if 0
 #define SYSFS_DEVICES_PCI "/sys/devices/pci"
@@ -139,9 +142,12 @@ typedef struct
 
 extern vlib_pci_main_t freebsd_pci_main;
 
+#define NOTIMPL printf("%s:%d: Not implemented\n", __func__, __LINE__); __builtin_debugtrap();
+
 uword
 vlib_pci_get_private_data (vlib_main_t * vm, vlib_pci_dev_handle_t h)
 {
+	NOTIMPL
 	return 0;
 }
 
@@ -154,18 +160,21 @@ vlib_pci_set_private_data (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 vlib_pci_addr_t *
 vlib_pci_get_addr (vlib_main_t * vm, vlib_pci_dev_handle_t h)
 {
+	NOTIMPL
 	return NULL;
 }
 
 u32
 vlib_pci_get_numa_node (vlib_main_t * vm, vlib_pci_dev_handle_t h)
 {
+	NOTIMPL
 	return 0;
 }
 
 u32
 vlib_pci_get_num_msix_interrupts (vlib_main_t * vm, vlib_pci_dev_handle_t h)
 {
+	NOTIMPL
   return 0;
 }
 
@@ -174,18 +183,97 @@ vlib_pci_get_num_msix_interrupts (vlib_main_t * vm, vlib_pci_dev_handle_t h)
    pci only when it's needed. */
 clib_error_t *pci_bus_init (vlib_main_t * vm);
 
-//linux_pci_main_t linux_pci_main;
+//freebsd_pci_main_t freebsd_pci_main;
 
 vlib_pci_device_info_t *
 vlib_pci_get_device_info (vlib_main_t * vm, vlib_pci_addr_t * addr,
 			  clib_error_t ** error)
 {
-  return NULL;
+/* Populate a vlib_pci_device_info_t from the given address */
+
+printf("%s:%d request for address 0x%08x\n", __func__, __LINE__, addr->as_u32);
+  clib_error_t *err = NULL;
+  vlib_pci_device_info_t *di = NULL;
+
+  int fd = -1;
+  struct pci_conf_io pci;
+  struct pci_conf match;
+  struct pci_match_conf pattern;
+  bzero (&match, sizeof(match));
+  bzero (&pattern, sizeof(pattern));
+
+  pattern.pc_sel.pc_domain = addr->domain;
+  pattern.pc_sel.pc_bus = addr->bus;
+  pattern.pc_sel.pc_dev = addr->slot;
+  pattern.pc_sel.pc_func = addr->function;
+  pattern.flags = PCI_GETCONF_MATCH_DOMAIN | PCI_GETCONF_MATCH_BUS
+    | PCI_GETCONF_MATCH_DEV | PCI_GETCONF_MATCH_FUNC;
+                                      
+  pci.pat_buf_len = sizeof (pattern);
+  pci.num_patterns = 1;
+  pci.patterns = &pattern;
+  pci.match_buf_len = sizeof (match);
+  pci.num_matches = 1;
+  pci.matches = &match;
+  pci.offset = 0;
+  pci.generation = 0;
+  pci.status = 0;
+                                      
+  fd = open ("/dev/pci", 0);             
+  if (fd == -1) {                       
+    err = clib_error_return_unix (0, "open '/dev/pci'");
+    goto error;
+  }                                     
+                                        
+  if (ioctl (fd, PCIOCGETCONF, &pci) == -1) {
+    err = clib_error_return_unix (0, "reading PCIOCGETCONF");
+    goto error;
+  }                                     
+  printf("%s:%d Read PCIOCGETCONF, returned %d matches\n", __func__, __LINE__, pci.num_matches);  
+
+  if (pci.num_matches != 1) {
+printf("%s:%d expected 1 match returned\n", __func__, __LINE__);
+    __builtin_debugtrap();
+    goto error;
+  }
+
+  di = clib_mem_alloc (sizeof (vlib_pci_device_info_t));
+  clib_memset (di, 0, sizeof (vlib_pci_device_info_t));
+
+  di->addr.as_u32 = addr->as_u32;
+  di->numa_node = 0;  /* TODO: Place holder until we have NUMA on FreeBSD */
+
+  di->device_class = match.pc_class;
+  di->vendor_id = match.pc_vendor;
+  di->device_id = match.pc_device;
+  di->revision = match.pc_revid;
+
+  di->product_name = NULL; //(u8 *) "NOTSUPPORTED";
+  di->vpd_r = 0;
+  di->vpd_w = 0;
+
+// This might be working or the source of a problem
+  di->driver_name = format(0, "%s", &match.pd_name);
+//di->driver_name = format (0, "<NONE>%c", 0);	// Fall back to not caring
+
+  di->iommu_group = -1;
+
+  goto done;
+
+error:
+  vlib_pci_free_device_info (di);
+  di = NULL;
+done:
+  if (error)
+    *error = err;
+  close (fd);
+  return di;
 }
 
 clib_error_t *__attribute__ ((weak))
 vlib_pci_get_device_root_bus (vlib_pci_addr_t *addr, vlib_pci_addr_t *root_bus)
 {
+	NOTIMPL
   return NULL;
 }
 
@@ -193,19 +281,40 @@ clib_error_t *
 vlib_pci_bind_to_uio (vlib_main_t *vm, vlib_pci_addr_t *addr,
 		      char *uio_drv_name, int force)
 {
-	return NULL;
+printf("%s:%d\t#####\tNOT IMPLEMENTED\t#####\n", __func__, __LINE__);
+  clib_error_t *error = 0;
+  vlib_pci_device_info_t *di;
+  
+  di = vlib_pci_get_device_info (vm, addr, &error);
+
+  if (error) {
+printf("%s:%d error getting pci device\n", __func__, __LINE__);
+    return error;
+  }
+printf("%s:%d got device: %s\n", __func__, __LINE__, di->driver_name);
+
+  if (strncmp("auto", uio_drv_name, 5) == 0) {
+printf("%s:%d uio_drv_name 'auto'\n", __func__, __LINE__);
+
+// TODO: Should confirm that nic_uio is loaded here
+    uio_drv_name = "nic_uio";
+  }
+
+  return error;
 }
 
 clib_error_t *
 vlib_pci_register_intx_handler (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 				pci_intx_handler_function_t * intx_handler)
 {
+	NOTIMPL
   return NULL;
 }
 
 clib_error_t *
 vlib_pci_unregister_intx_handler (vlib_main_t *vm, vlib_pci_dev_handle_t h)
 {
+	NOTIMPL
   return NULL;
 }
 
@@ -214,6 +323,7 @@ vlib_pci_register_msix_handler (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 				u32 start, u32 count,
 				pci_msix_handler_function_t * msix_handler)
 {
+	NOTIMPL
   return NULL;
 }
 
@@ -221,6 +331,7 @@ clib_error_t *
 vlib_pci_unregister_msix_handler (vlib_main_t *vm, vlib_pci_dev_handle_t h,
 				  u32 start, u32 count)
 {
+	NOTIMPL
 	return NULL;
 }
 
@@ -228,6 +339,7 @@ clib_error_t *
 vlib_pci_enable_msix_irq (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 			  u16 start, u16 count)
 {
+	NOTIMPL
 	return NULL;
 }
 
@@ -235,6 +347,7 @@ uword
 vlib_pci_get_msix_file_index (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 			      u16 index)
 {
+	NOTIMPL
 	return 0;
 }
 
@@ -242,6 +355,7 @@ clib_error_t *
 vlib_pci_disable_msix_irq (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 			   u16 start, u16 count)
 {
+	NOTIMPL
 	return NULL;
 }
 
@@ -252,6 +366,7 @@ vlib_pci_read_write_config (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 			    vlib_read_or_write_t read_or_write,
 			    uword address, void *data, u32 n_bytes)
 {
+	NOTIMPL
 	return NULL;
 }
 
@@ -259,6 +374,7 @@ clib_error_t *
 vlib_pci_map_region (vlib_main_t * vm, vlib_pci_dev_handle_t h, u32 resource,
 		     void **result)
 {
+	NOTIMPL
   return NULL;
 }
 
@@ -266,12 +382,14 @@ clib_error_t *
 vlib_pci_map_region_fixed (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 			   u32 resource, u8 * addr, void **result)
 {
+	NOTIMPL
   return NULL;
 }
 
 clib_error_t *
 vlib_pci_io_region (vlib_main_t * vm, vlib_pci_dev_handle_t h, u32 resource)
 {
+	NOTIMPL
   return NULL;
 }
 
@@ -280,18 +398,21 @@ vlib_pci_read_write_io (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 			vlib_read_or_write_t read_or_write,
 			uword offset, void *data, u32 length)
 {
+	NOTIMPL
   return NULL;
 }
 
 clib_error_t *
 vlib_pci_map_dma (vlib_main_t * vm, vlib_pci_dev_handle_t h, void *ptr)
 {
+	NOTIMPL
   return NULL;
 }
 
 int
 vlib_pci_supports_virtual_addr_dma (vlib_main_t * vm, vlib_pci_dev_handle_t h)
 {
+	NOTIMPL
   return 0;
 }
 
@@ -299,6 +420,7 @@ clib_error_t *
 vlib_pci_device_open (vlib_main_t * vm, vlib_pci_addr_t * addr,
 		      pci_device_id_t ids[], vlib_pci_dev_handle_t * handle)
 {
+	NOTIMPL
   return NULL;
 }
 
@@ -308,16 +430,111 @@ vlib_pci_device_close (vlib_main_t * vm, vlib_pci_dev_handle_t h) { }
 void
 init_device_from_registered (vlib_main_t * vm, vlib_pci_device_info_t * di) { }
 
+static int
+pci_addr_cmp (void *v1, void *v2)
+{
+  vlib_pci_addr_t *a1 = v1;
+  vlib_pci_addr_t *a2 = v2;
+
+  if (a1->domain > a2->domain)
+    return 1;
+  if (a1->domain < a2->domain)
+    return -1;
+  if (a1->bus > a2->bus)
+    return 1;
+  if (a1->bus < a2->bus)
+    return -1;
+  if (a1->slot > a2->slot)
+    return 1;
+  if (a1->slot < a2->slot)
+    return -1;
+  if (a1->function > a2->function)
+    return 1;
+  if (a1->function < a2->function)
+    return -1;
+  return 0;
+}
+
 vlib_pci_addr_t *
 vlib_pci_get_all_dev_addrs ()
 {
-	return NULL;
+  vlib_pci_addr_t *addrs = 0;
+
+  int fd = -1;
+  struct pci_conf_io pci;               
+  struct pci_conf matches[32];          
+  bzero(matches, sizeof(matches));      
+                                      
+  pci.pat_buf_len = 0;
+  pci.num_patterns = 0;
+  pci.patterns = NULL;
+  pci.match_buf_len = sizeof(matches);
+  pci.num_matches = 32;
+  pci.matches = (struct pci_conf *)&matches;
+  pci.offset = 0;
+  pci.generation = 0;
+  pci.status = 0;
+                                      
+  fd = open ("/dev/pci", 0);             
+  if (fd == -1) {                       
+    perror ("opening /dev/pci");   
+    return (NULL);
+  }                                     
+                                        
+  if (ioctl (fd, PCIOCGETCONF, &pci) == -1) {
+    perror ("reading pci config"); 
+    close(fd);
+    return (NULL);
+  }                                     
+  printf("Read PCIOCGETCONF, returned %d matches\n", pci.num_matches);  
+
+  for (int i = 0; i < pci.num_matches; i++) {    
+    struct pci_conf *m = &pci.matches[i];
+    vlib_pci_addr_t addr;
+
+    printf("%d: class=%x subclass=%x rev=%x hdr=%x vendor=%x device=%x subvendor=%x subdevice=%x\n",
+            i, m->pc_class, m->pc_subclass, m->pc_revid, m->pc_hdr, m->pc_vendor,
+	            m->pc_device, m->pc_subvendor, m->pc_subdevice);
+
+
+    addr.domain = m->pc_sel.pc_domain;
+    addr.bus = m->pc_sel.pc_bus;
+    addr.slot = m->pc_sel.pc_dev;      // TODO: bit magic required?
+    addr.function = m->pc_sel.pc_func;  // TODO: bit magic required?
+
+    vec_add1 (addrs, addr);
+  }
+
+  vec_sort_with_function (addrs, pci_addr_cmp);
+  close (fd);
+
+  return addrs;
 }
 
 clib_error_t *
 freebsd_pci_init (vlib_main_t * vm)
 {
-  return NULL;
+  vlib_pci_main_t *pm = &pci_main;
+  vlib_pci_addr_t *addr = 0, *addrs;
+
+  pm->vlib_main = vm;
+
+  ASSERT (sizeof (vlib_pci_addr_t) == sizeof (u32));
+
+  addrs = vlib_pci_get_all_dev_addrs ();
+  /* *INDENT-OFF* */
+  vec_foreach (addr, addrs)
+    {
+      vlib_pci_device_info_t *d;
+      if ((d = vlib_pci_get_device_info (vm, addr, 0)))
+        {
+          init_device_from_registered (vm, d);
+          vlib_pci_free_device_info (d);
+        }
+    }
+  /* *INDENT-ON* */
+    
+  return 0;
 }
 
 /* *INDENT-OFF* */

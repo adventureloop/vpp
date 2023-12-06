@@ -441,6 +441,7 @@ vlib_put_next_frame (vlib_main_t * vm,
 		     vlib_node_runtime_t * r,
 		     u32 next_index, u32 n_vectors_left)
 {
+//printf("%s:%d\n", __func__, __LINE__);
   vlib_node_main_t *nm = &vm->node_main;
   vlib_next_frame_t *nf;
   vlib_frame_t *f;
@@ -1968,8 +1969,10 @@ printf("%s:%d\n", __func__, __LINE__);
     }
 
   /* See unix/main.c; most likely already set up */
-  if (vgm->init_functions_called == 0)
+  if (vgm->init_functions_called == 0) {
+  printf("%s:%d INIT_FUNCTIONS_CALLED\n", __func__, __LINE__);
     vgm->init_functions_called = hash_create (0, /* value bytes */ 0);
+    }
   if ((error = vlib_call_all_init_functions (vm)))
     goto done;
 

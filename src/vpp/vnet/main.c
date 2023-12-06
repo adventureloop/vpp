@@ -14,6 +14,8 @@
  */
 
 #define _GNU_SOURCE
+#include <sys/sysctl.h>
+
 #include <pthread.h>
 #include <sched.h>
 
@@ -39,17 +41,29 @@ char *vat_plugin_path = NULL;
 static void
 vpp_find_plugin_path ()
 {
+//  vlib_global_main_t *vgm = vlib_get_global_main();
   extern char *vat_plugin_path;
   char *p, path[PATH_MAX];
-  int rv;
+//  int rv;
   u8 *s;
 
+#if 0
   /* find executable path */
   if ((rv = readlink ("/proc/self/exe", path, PATH_MAX - 1)) == -1)
     return;
-
   /* readlink doesn't provide null termination */
   path[rv] = 0;
+#else
+  int mib[4];
+  mib[0] = CTL_KERN;
+  mib[1] = KERN_PROC;
+  mib[2] = KERN_PROC_PATHNAME;
+  mib[3] = -1;
+
+  size_t cb = sizeof(path);
+  sysctl(mib, 4, path, &cb, NULL, 0);
+
+#endif
 
   /* strip filename */
   if ((p = strrchr (path, '/')) == 0)

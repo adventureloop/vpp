@@ -191,6 +191,8 @@ done:
   return error;
 }
 
+#pragma error "This shouldn't be built"
+
 clib_error_t *
 clib_sysfs_get_free_hugepages (int numa_node, int log2_page_size, int *v)
 {

@@ -210,7 +210,6 @@ set(VPPINFRA_HEADERS
   vector_sse42.h
   warnings.h
   xxhash.h
-  linux/sysfs.h
 )
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")

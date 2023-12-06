@@ -21,7 +21,8 @@ SAMPLE_PLUGIN?=no
 STARTUP_DIR?=$(PWD)
 MACHINE=$(shell uname -m)
 SUDO?=sudo -E
-DPDK_CONFIG?=no-pci
+#DPDK_CONFIG?=no-pci
+DPDK_CONFIG?="dev 0000:00:03.0"
 
 ,:=,
 define disable_plugins
@@ -38,11 +39,11 @@ unix { 									\
 	cli-listen /run/vpp/cli.sock					\
 	gid $(shell id -g)						\
 	$(if $(wildcard startup.vpp),"exec startup.vpp",)		\
-}									\
-" # Moved around
-#$(if $(DPDK_CONFIG), "dpdk { $(DPDK_CONFIG) }",)			\
-#$(if $(EXTRA_VPP_CONFIG), "$(EXTRA_VPP_CONFIG)",)			\
-#$(call disable_plugins,$(DISABLED_PLUGINS))				\
+} 									\
+$(if $(DPDK_CONFIG), "dpdk { $(DPDK_CONFIG) }",)			\
+$(if $(EXTRA_VPP_CONFIG), "$(EXTRA_VPP_CONFIG)",)			\
+$(call disable_plugins,$(DISABLED_PLUGINS))				\
+"
 
 GDB_ARGS= -ex "handle SIGUSR1 noprint nostop"
 

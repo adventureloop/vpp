@@ -35,6 +35,7 @@ static vlib_log_class_t vat_builtin_logger;
 static int
 load_one_vat_plugin (plugin_main_t * pm, plugin_info_t * pi)
 {
+//printf("%s:%d %s\n", __func__, __LINE__, pi->filename);
   void *handle, *register_handle;
   clib_error_t *(*fp) (vat_main_t *);
   clib_error_t *error;
@@ -196,6 +197,7 @@ char *vat_plugin_name_filter = 0;
 int
 vat_plugin_init (vat_main_t * vam)
 {
+printf("%s %s:%d\n", __FILE__, __func__, __LINE__);
   plugin_main_t *pm = &vat_plugin_main;
   u8 *vlib_get_vat_plugin_path (void);
   u8 *vlib_get_vat_plugin_name_filter (void);

@@ -24,7 +24,7 @@
 
 #include <rte_eal.h>
 #include <rte_bus_pci.h>
-#include <rte_bus_vmbus.h>
+//#include <rte_bus_vmbus.h>
 #include <rte_ethdev.h>
 #include <rte_version.h>
 #include <rte_net.h>
@@ -35,7 +35,7 @@
 
 #include <bus_driver.h>
 #include <bus_pci_driver.h>
-#include <bus_vmbus_driver.h>
+//#include <bus_vmbus_driver.h>
 #endif
 
 #include <vnet/devices/devices.h>

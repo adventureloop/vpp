@@ -290,6 +290,7 @@ format_vnet_sw_if_index_name (u8 * s, va_list * args)
 
   if (NULL == si)
     {
+printf("%s:%d\n", __func__, __LINE__);
       return format (s, "DELETED");
     }
   return format (s, "%U", format_vnet_sw_interface_name, vnm, si);
@@ -304,9 +305,10 @@ format_vnet_hw_if_index_name (u8 * s, va_list * args)
 
   hi = vnet_get_hw_interface (vnm, hw_if_index);
 
-  if (hi == 0)
+  if (hi == 0) {
+printf("%s:%d\n", __func__, __LINE__);
     return format (s, "DELETED");
-
+	}
   return format (s, "%v", hi->name);
 }
 

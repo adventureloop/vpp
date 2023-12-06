@@ -491,6 +491,7 @@ dpdk_get_pci_device (const struct rte_eth_dev_info *info)
     return NULL;
 }
 
+#if 0
 /* If this device is VMBUS return pointer to info, otherwise NULL */
 struct rte_vmbus_device *
 dpdk_get_vmbus_device (const struct rte_eth_dev_info *info)
@@ -507,6 +508,7 @@ dpdk_get_vmbus_device (const struct rte_eth_dev_info *info)
   else
     return NULL;
 }
+#endif
 
 /*
  * fd.io coding-style-patch-verification: ON

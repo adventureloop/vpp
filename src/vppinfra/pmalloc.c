@@ -69,7 +69,7 @@ clib_pmalloc_init (clib_pmalloc_main_t * pm, uword base_addr, uword size)
   pm->max_pages = size >> pm->def_log2_page_sz;
 
   base = clib_mem_vm_reserve (base_addr, size, pm->def_log2_page_sz);
-printf("base is %lu (and not %d\n", base, ~0);
+//printf("base is %lu (and not %d\n", base, ~0);
   if (base == ~0)
     {
       pm->error = clib_error_return (0, "failed to reserve %u pages",
@@ -78,7 +78,7 @@ printf("base is %lu (and not %d\n", base, ~0);
     }
 
   pm->base = uword_to_pointer (base, void *);
-printf("base is %lu (and not %d\n", base, ~0);
+//printf("base is %lu (and not %d\n", base, ~0);
   return 0;
 }
 
@@ -236,8 +236,8 @@ pmalloc_map_pages (clib_pmalloc_main_t * pm, clib_pmalloc_arena_t * a,
 
   clib_error_free (pm->error);
 
-printf("%s:%d pm->max_pages %d vec_len(pm->pages) %d \n", __func__, __LINE__, 
-pm->max_pages, vec_len(pm->pages));
+//printf("%s:%d pm->max_pages %d vec_len(pm->pages) %d \n", __func__, __LINE__, 
+//pm->max_pages, vec_len(pm->pages));
   if (pm->max_pages <= vec_len (pm->pages))
     {
       pm->error = clib_error_return (0, "maximum number of pages reached");
@@ -249,7 +249,7 @@ pm->max_pages, vec_len(pm->pages));
       pm->error = clib_sysfs_prealloc_hugepages (numa_node,
 						 a->log2_subpage_sz, n_pages);
 
-printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d\n", __func__, __LINE__);
       if (pm->error)
 	return 0;
     }
@@ -259,7 +259,7 @@ printf("%s:%d\n", __func__, __LINE__);
     {
       pm->error = clib_error_return_unix (0, "failed to set mempolicy for "
 					  "numa node %u", numa_node);
-printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d\n", __func__, __LINE__);
       return 0;
     }
 
@@ -298,7 +298,7 @@ printf("%s:%d\n", __func__, __LINE__);
 					  "fd %d numa %d flags 0x%x", n_pages,
 					  va, a->fd, numa_node, mmap_flags);
       va = MAP_FAILED;
-printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d\n", __func__, __LINE__);
       goto error;
     }
 
@@ -315,7 +315,7 @@ printf("%s:%d\n", __func__, __LINE__);
   if (rv == CLIB_MEM_ERROR && numa_node != 0)
     {
       pm->error = clib_error_return_unix (0, "failed to restore mempolicy");
-printf("%s:%d ERORR label\n", __func__, __LINE__);
+//printf("%s:%d ERORR label\n", __func__, __LINE__);
       goto error;
     }
 
@@ -340,8 +340,8 @@ printf("%s:%d ERORR label\n", __func__, __LINE__);
 			 "expected %u",
 			 allocated_at, numa_node);
 
-printf("%s:%d ERROR LABEL page allocted on wrong numa node at %d expected %d \n", __func__, __LINE__,
-allocated_at, numa_node);
+//printf("%s:%d ERROR LABEL page allocted on wrong numa node at %d expected %d \n", __func__, __LINE__,
+//allocated_at, numa_node);
       goto error;
     }
 
@@ -371,7 +371,7 @@ allocated_at, numa_node);
   return pp - (n_pages - 1);
 
 error:
-printf("%s:%d ERORR label\n", __func__, __LINE__);
+//printf("%s:%d ERORR label\n", __func__, __LINE__);
   if (va != MAP_FAILED)
     {
       /* unmap & reserve */
@@ -392,7 +392,7 @@ clib_pmalloc_create_shared_arena (clib_pmalloc_main_t * pm, char *name,
   clib_pmalloc_page_t *pp;
   u32 n_pages;
 
-printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d\n", __func__, __LINE__);
   clib_error_free (pm->error);
 
   if (log2_page_sz == 0)
@@ -404,20 +404,20 @@ printf("%s:%d\n", __func__, __LINE__);
 				     1 << (log2_page_sz - 10));
       return 0;
     }
-printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d\n", __func__, __LINE__);
 
   n_pages = pmalloc_size2pages (size, pm->def_log2_page_sz);
 
   if (n_pages + vec_len (pm->pages) > pm->max_pages) {
-printf("%s:%d, n_pages %d vec_len (pm->pages) %d, pm->max_pages %d test %d\n", __func__, __LINE__,
-n_pages,  vec_len (pm->pages), pm->max_pages, (n_pages + vec_len (pm->pages) > pm->max_pages));
+//printf("%s:%d, n_pages %d vec_len (pm->pages) %d, pm->max_pages %d test %d\n", __func__, __LINE__,
+//n_pages,  vec_len (pm->pages), pm->max_pages, (n_pages + vec_len (pm->pages) > pm->max_pages));
     return 0;
   }
-printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d\n", __func__, __LINE__);
 
   if (numa_node == CLIB_PMALLOC_NUMA_LOCAL)
     numa_node = clib_get_current_numa_node ();
-printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d\n", __func__, __LINE__);
 
   pool_get (pm->arenas, a);
   a->index = a - pm->arenas;
@@ -432,10 +432,10 @@ printf("%s:%d\n", __func__, __LINE__);
       vec_free (a->name);
       memset (a, 0, sizeof (*a));
       pool_put (pm->arenas, a);
-printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d\n", __func__, __LINE__);
       return 0;
     }
-printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d\n", __func__, __LINE__);
 
   return pm->base + ((uword) pp->index << pm->def_log2_page_sz);
 }

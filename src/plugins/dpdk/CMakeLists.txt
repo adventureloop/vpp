@@ -90,8 +90,9 @@ else()
     ##############################################################################
     # libnuma
     ##############################################################################
-    vpp_plugin_find_library(dpdk NUMA_LIB "numa")
-    list(APPEND DPDK_LINK_LIBRARIES ${NUMA_LIB})
+# TODO
+#    vpp_plugin_find_library(dpdk NUMA_LIB "numa")
+#    list(APPEND DPDK_LINK_LIBRARIES ${NUMA_LIB})
 
     ##############################################################################
     # Mellanox libraries

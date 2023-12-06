@@ -3567,6 +3567,7 @@ unix_show_files (vlib_main_t * vm,
   /* *INDENT-OFF* */
   pool_foreach (f, fm->file_pool)
    {
+printf("%s:%d THIS IS USING READLINK and will FAIL\n", __func__, __LINE__);   
       int rv;
       s = format (s, "/proc/self/fd/%d%c", f->file_descriptor, 0);
       rv = readlink((char *) s, path, PATH_MAX - 1);

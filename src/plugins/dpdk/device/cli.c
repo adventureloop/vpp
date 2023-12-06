@@ -21,7 +21,7 @@
 #include <vppinfra/error.h>
 #include <vppinfra/format.h>
 #include <vppinfra/xxhash.h>
-#include <vppinfra/linux/sysfs.c>
+#include <vppinfra/freebsd/sysfs.c>
 
 #include <vnet/ethernet/ethernet.h>
 #include <dpdk/buffer.h>
