@@ -201,6 +201,7 @@ load_one_plugin (plugin_main_t * pm, plugin_info_t * pi, int from_early_init)
 				   &section);
   if (error)
     {
+printf("%s:%d Not a plugin %s\n", __func__, __LINE__, pi->name);
       PLUGIN_LOG_ERR ("Not a plugin: %s\n", (char *) pi->name);
       return -1;
     }
@@ -311,6 +312,8 @@ process_reg:
 
   if (handle == 0)
     {
+printf("%s:%d loading plugin %s failed: %s\n", __func__, __LINE__, pi->filename, dlerror());
+__builtin_debugtrap();
       PLUGIN_LOG_ERR ("%s", dlerror ());
       PLUGIN_LOG_ERR ("Failed to load plugin '%s'", pi->name);
       goto error;
@@ -418,6 +421,7 @@ index_cmp (void *a1, void *a2)
 int
 vlib_load_new_plugins (plugin_main_t * pm, int from_early_init)
 {
+printf("%s:%d\n", __func__, __LINE__);
   DIR *dp;
   struct dirent *entry;
   struct stat statb;

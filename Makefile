@@ -38,8 +38,8 @@ unix { 									\
 	cli-listen /run/vpp/cli.sock					\
 	gid $(shell id -g)						\
 	$(if $(wildcard startup.vpp),"exec startup.vpp",)		\
-}									\
-" # Moved around
+} 									\
+"
 #$(if $(DPDK_CONFIG), "dpdk { $(DPDK_CONFIG) }",)			\
 #$(if $(EXTRA_VPP_CONFIG), "$(EXTRA_VPP_CONFIG)",)			\
 #$(call disable_plugins,$(DISABLED_PLUGINS))				\

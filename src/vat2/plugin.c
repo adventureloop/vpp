@@ -35,6 +35,8 @@ plugin_info_t *plugin_info;
 static int
 load_one_plugin (plugin_info_t * pi)
 {
+printf("%s:%d %s\n", __func__, __LINE__, pi->filename);
+
   void *handle, *register_handle;
   clib_error_t *(*fp) (void);
   clib_error_t *error;

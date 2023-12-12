@@ -66,15 +66,27 @@ static u8 *
 vat2_find_plugin_path (void)
 {
   char *p, path[PATH_MAX];
-  int rv;
   u8 *s;
 
+#if 0
+  int rv;
   /* find executable path */
   if ((rv = readlink ("/proc/self/exe", path, PATH_MAX - 1)) == -1)
     return 0;
 
   /* readlink doesn't provide null termination */
   path[rv] = 0;
+#else
+#include <sys/sysctl.h>
+  int mib[4];
+  mib[0] = CTL_KERN;
+  mib[1] = KERN_PROC;
+  mib[2] = KERN_PROC_PATHNAME;
+  mib[3] = -1;
+
+  size_t cb = sizeof(path);
+  sysctl(mib, 4, path, &cb, NULL, 0);
+#endif
 
   /* strip filename */
   if ((p = strrchr (path, '/')) == 0)

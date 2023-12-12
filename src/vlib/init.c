@@ -334,6 +334,7 @@ call_init_exit_functions_internal (vlib_main_t *vm,
 				   _vlib_init_function_list_elt_t **headp,
 				   int call_once, int do_sort, int is_global)
 {
+//printf("%s %s:%d\n", __FILE__, __func__, __LINE__);
   vlib_global_main_t *vgm = vlib_get_global_main ();
   clib_error_t *error = 0;
   _vlib_init_function_list_elt_t *i;
@@ -344,6 +345,7 @@ call_init_exit_functions_internal (vlib_main_t *vm,
   i = *headp;
   while (i)
     {
+//printf("%s:%d %s\n", __func__, __LINE__, i->name);
       uword *h;
 
       if (is_global)
@@ -439,7 +441,7 @@ vlib_call_all_config_functions (vlib_main_t * vm,
 //printf("%s:%d\n", __func__, __LINE__);
   while (c)
     {
-//printf("%s:%d\n", __func__, __LINE__);
+//printf("%s:%d %s\n", __func__, __LINE__, c->name);
       hash_set_mem (hash, c->name, vec_len (all));
       vec_add1 (all, c);
       unformat_init (&c->input, 0, 0);

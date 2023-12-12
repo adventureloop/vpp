@@ -295,15 +295,27 @@ static void
 vat_find_plugin_path ()
 {
   char *p, path[PATH_MAX];
-  int rv;
   u8 *s;
 
+#if 0
+  int rv;
   /* find executable path */
   if ((rv = readlink ("/proc/self/exe", path, PATH_MAX - 1)) == -1)
     return;
 
   /* readlink doesn't provide null termination */
   path[rv] = 0;
+#else
+#include <sys/sysctl.h>
+  int mib[4];
+  mib[0] = CTL_KERN;
+  mib[1] = KERN_PROC;
+  mib[2] = KERN_PROC_PATHNAME;
+  mib[3] = -1;
+
+  size_t cb = sizeof(path);
+  sysctl(mib, 4, path, &cb, NULL, 0);
+#endif
 
   /* strip filename */
   if ((p = strrchr (path, '/')) == 0)
@@ -345,6 +357,7 @@ call_init_exit_functions_internal (vlib_main_t *vm,
 				   _vlib_init_function_list_elt_t **headp,
 				   int call_once, int do_sort, int is_global)
 {
+//printf("%s %s:%d\n", __FILE__, __func__, __LINE__);
   vlib_global_main_t *vgm = vlib_get_global_main ();
   clib_error_t *error = 0;
   _vlib_init_function_list_elt_t *i;
@@ -409,6 +422,7 @@ vat_register_interface_dump (vat_main_t *vam)
 int
 main (int argc, char **argv)
 {
+printf("%s %s:%d\n", __FILE__, __func__, __LINE__);
   vlib_global_main_t *vgm = vlib_get_global_main ();
   vat_main_t *vam = &vat_main;
   unformat_input_t _argv, *a = &_argv;
@@ -513,16 +527,18 @@ main (int argc, char **argv)
   vec_validate (vam->inbuf, 4096);
 
   load_features ();
+printf("%s %s:%d\n", __FILE__, __func__, __LINE__);
 
   vam->current_file = (u8 *) "plugin-init";
   vat_plugin_init (vam);
-
   vat_register_interface_dump (vam);
 
   if (!json_output)
     vam->api_sw_interface_dump (vam);
 
   /* Set up the init function hash table */
+printf("%s:%d INIT_FUNCTIONS_CALLED\n", __func__, __LINE__);
+
   vgm->init_functions_called = hash_create (0, 0);
 
   /* Execute plugin init and api_init functions */
