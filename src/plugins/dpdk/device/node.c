@@ -467,7 +467,7 @@ dpdk_device_input (vlib_main_t * vm, dpdk_main_t * dm, dpdk_device_t * xd,
 
 	  /* if PMD supports ip4 checksum check and there are no packets
 	     marked as ip4 checksum bad we can notify ethernet input so it
-	     can send pacets to ip4-input-no-checksum node */
+	     can send packets to ip4-input-no-checksum node */
 	  if (xd->flags & DPDK_DEVICE_FLAG_RX_IP4_CKSUM &&
 	      (or_flags & RTE_MBUF_F_RX_IP_CKSUM_BAD) == 0)
 	    f->flags |= ETH_INPUT_FRAME_F_IP4_CKSUM_OK;
