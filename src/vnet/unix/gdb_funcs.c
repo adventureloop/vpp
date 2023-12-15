@@ -415,7 +415,7 @@ gdb_dump_trajectory_trace (u32 bi)
       fformat (stderr, "%v (%d)\n", vnm->nodes[node_index]->name, node_index);
     }
 #else
-  fformat (stderr, "in vlib/buffers.h, "
+  fformat (stderr, "in vlib/buffer.h, "
 		   "#define VLIB_BUFFER_TRACE_TRAJECTORY 1\n");
 
 #endif
