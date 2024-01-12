@@ -23,9 +23,12 @@
 #include <fcntl.h>
 #include <dirent.h>
 
+#define NOTIMPL printf("%s:%d: Not implemented\n", __func__, __LINE__);// __builtin_debugtrap();
+
 __clib_export clib_error_t *
 clib_sysfs_write (char *file_name, char *fmt, ...)
 {
+NOTIMPL
 #if 0
   u8 *s;
   int fd;
@@ -53,6 +56,7 @@ clib_sysfs_write (char *file_name, char *fmt, ...)
 __clib_export clib_error_t *
 clib_sysfs_read (char *file_name, char *fmt, ...)
 {
+NOTIMPL
 #if 0
   unformat_input_t input;
   u8 *s = 0;
@@ -97,6 +101,8 @@ clib_sysfs_read (char *file_name, char *fmt, ...)
 clib_error_t *
 clib_sysfs_set_nr_hugepages (int numa_node, int log2_page_size, int nr)
 {
+NOTIMPL
+
 #if 0
   clib_error_t *error = 0;
   struct stat sb;
@@ -152,6 +158,7 @@ static clib_error_t *
 clib_sysfs_get_xxx_hugepages (char *type, int numa_node,
 			      int log2_page_size, int *val)
 {
+NOTIMPL
   clib_error_t *error = 0;
   struct stat sb;
   u8 *p = 0;
@@ -206,6 +213,7 @@ done:
 clib_error_t *
 clib_sysfs_get_free_hugepages (int numa_node, int log2_page_size, int *v)
 {
+NOTIMPL
 #if 0
   return clib_sysfs_get_xxx_hugepages ("free", numa_node, log2_page_size, v);
 #endif  
@@ -215,6 +223,7 @@ clib_sysfs_get_free_hugepages (int numa_node, int log2_page_size, int *v)
 clib_error_t *
 clib_sysfs_get_nr_hugepages (int numa_node, int log2_page_size, int *v)
 {
+NOTIMPL
 #if 0
   return clib_sysfs_get_xxx_hugepages ("nr", numa_node, log2_page_size, v);
 #endif  
@@ -224,6 +233,7 @@ clib_sysfs_get_nr_hugepages (int numa_node, int log2_page_size, int *v)
 clib_error_t *
 clib_sysfs_get_surplus_hugepages (int numa_node, int log2_page_size, int *v)
 {
+NOTIMPL
 #if 0
   return clib_sysfs_get_xxx_hugepages ("surplus", numa_node, log2_page_size,
 				       v);
@@ -234,6 +244,8 @@ clib_sysfs_get_surplus_hugepages (int numa_node, int log2_page_size, int *v)
 clib_error_t *
 clib_sysfs_prealloc_hugepages (int numa_node, int log2_page_size, int nr)
 {
+NOTIMPL
+printf("%s:%d I think this is our candidate problem\n", __func__, __LINE__);
 #if 0
   clib_error_t *error = 0;
   int n, needed;
@@ -264,6 +276,7 @@ clib_sysfs_prealloc_hugepages (int numa_node, int log2_page_size, int nr)
 __clib_export uword *
 clib_sysfs_list_to_bitmap (char *filename)
 {
+NOTIMPL
 #if 0
   FILE *fp;
   uword *r = 0;

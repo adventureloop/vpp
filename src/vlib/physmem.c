@@ -53,7 +53,6 @@ vlib_physmem_shared_map_create (vlib_main_t * vm, char *name, uword size,
 
   va = clib_pmalloc_create_shared_arena (pm, name, size, log2_page_sz,
 					 numa_node);
-//printf("%s:%d clib_pmalloc_create_shared_arena returned %p (va, which is an error)\n", __func__, __LINE__, va);
   if (va == 0)
     return clib_error_return (0, "%U", format_clib_error,
 			      clib_pmalloc_last_error (pm));
@@ -103,10 +102,10 @@ vlib_physmem_init (vlib_main_t * vm)
   if (pt && pt[0])
     vpm->flags |= VLIB_PHYSMEM_MAIN_F_HAVE_PAGEMAP;
   vec_free (pt);
-
-//  if ((error = linux_vfio_init (vm)))
-//    return error;
-
+#if 0
+  if ((error = linux_vfio_init (vm)))
+    return error;
+#endif
   p = clib_mem_alloc_aligned (sizeof (clib_pmalloc_main_t),
 			      CLIB_CACHE_LINE_BYTES);
   memset (p, 0, sizeof (clib_pmalloc_main_t));

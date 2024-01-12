@@ -18,14 +18,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/memrange.h>
 #include <sys/mount.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-/*
-#include <linux/mempolicy.h>
-#include <linux/memfd.h>
-#include <vppinfra/linux/sysfs.h>
-*/
 #include <vppinfra/clib.h>
 #include <vppinfra/mem.h>
 #include <vppinfra/lock.h>
@@ -38,6 +34,8 @@
  * TODO: This is a mostly mechanical translation to FreeBSDify the
  * vppinfra/linux files. Attention is needed to complete an actual port 
  */
+
+#define NOTIMPL printf("%s:%d: Not implemented\n", __func__, __LINE__); __builtin_debugtrap();
 
 #ifndef F_FBSD_SPECIFIC_BASE
 #define F_FBSD_SPECIFIC_BASE 1024
@@ -146,6 +144,7 @@ __clib_export void
 clib_mem_vm_randomize_va (uword * requested_va,
 			  clib_mem_page_sz_t log2_page_size)
 {
+NOTIMPL
 #if 0
   u8 bit_mask = 15;
 
@@ -251,22 +250,7 @@ clib_mem_vm_create_fd (clib_mem_page_sz_t log2_page_size, char *fmt, ...)
     vec_set_len (s, 249);
   vec_add1 (s, 0);
 
-  /* memfd_create introduced in kernel 3.17, we don't support older kernels */
-#if 0
-  fd = syscall (__NR_memfd_create, (char *) s, memfd_flags);
-#else
   fd = memfd_create ((char *) s, memfd_flags);
-#endif
-
-#if 0
-  /* kernel versions < 4.14 does not support memfd_create for huge pages */
-  if (fd == -1 && errno == EINVAL &&
-      log2_page_size == CLIB_MEM_PAGE_SZ_DEFAULT_HUGE)
-    {
-      fd = legacy_memfd_create (s);
-    }
-  else 
-#endif
   if (fd == -1)
     {
       vec_reset_length (mm->error);
@@ -297,7 +281,7 @@ clib_mem_vm_reserve (uword start, uword size, clib_mem_page_sz_t log2_page_sz)
   uword sys_page_sz = 1ULL << mm->log2_page_sz;
   uword n_bytes;
   void *base = 0, *p;
-//This is chicken town
+
   size = round_pow2 (size, pagesize);
 
   /* in adition of requested reservation, we also rserve one system page
@@ -310,12 +294,9 @@ clib_mem_vm_reserve (uword start, uword size, clib_mem_page_sz_t log2_page_sz)
       if (start & pow2_mask (log2_page_sz))
 	return ~0;
       base = (void *) start - sys_page_sz;
-printf("base before mmap %p\n", base);
       base = mmap (base, size + sys_page_sz, PROT_NONE,
 		   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0);
 
-//	if (base == MAP_FAILED)
-//		__builtin_debugtrap();
       return (base == MAP_FAILED) ? ~0 : start;
     }
 
@@ -351,6 +332,7 @@ printf("base before mmap %p\n", base);
 __clib_export clib_mem_vm_map_hdr_t *
 clib_mem_vm_get_next_map_hdr (clib_mem_vm_map_hdr_t * hdr)
 {
+NOTIMPL
 #if 0
   clib_mem_main_t *mm = &clib_mem_main;
   uword sys_page_sz = 1ULL << mm->log2_page_sz;
@@ -591,7 +573,7 @@ __clib_export u64 *
 clib_mem_vm_get_paddr (void *mem, clib_mem_page_sz_t log2_page_size,
 		       int n_pages)
 {
-#if 0
+  struct mem_extract meme;
   int pagesize = sysconf (_SC_PAGESIZE);
   int fd;
   int i;
@@ -599,25 +581,16 @@ clib_mem_vm_get_paddr (void *mem, clib_mem_page_sz_t log2_page_size,
 
   log2_page_size = clib_mem_log2_page_size_validate (log2_page_size);
 
-  if ((fd = open ((char *) "/proc/self/pagemap", O_RDONLY)) == -1)
+  if ((fd = open ((char *) "/dev/mem", O_RDONLY)) == -1)
     return 0;
 
   for (i = 0; i < n_pages; i++)
     {
-      u64 seek, pagemap = 0;
-      uword vaddr = pointer_to_uword (mem) + (((u64) i) << log2_page_size);
-      seek = ((u64) vaddr / pagesize) * sizeof (u64);
-      if (lseek (fd, seek, SEEK_SET) != seek)
-	goto done;
+      meme.me_vaddr = pointer_to_uword (mem) + (((u64) i) << log2_page_size);
 
-      if (read (fd, &pagemap, sizeof (pagemap)) != (sizeof (pagemap)))
-	goto done;
-
-      if ((pagemap & (1ULL << 63)) == 0)
-	goto done;
-
-      pagemap &= pow2_mask (55);
-      vec_add1 (r, pagemap * pagesize);
+      if (ioctl(fd, MEM_EXTRACT_PADDR, &meme) == -1)
+        goto done;
+      vec_add1(r, meme.me_paddr * pagesize);
     }
 
 done:
@@ -628,13 +601,12 @@ done:
       return 0;
     }
   return r;
-#endif
-	return NULL;
 }
 
 __clib_export int
 clib_mem_set_numa_affinity (u8 numa_node, int force)
 {
+NOTIMPL
 #if 0
   clib_mem_main_t *mm = &clib_mem_main;
   clib_bitmap_t *bmp = 0;
@@ -677,6 +649,7 @@ clib_mem_set_numa_affinity (u8 numa_node, int force)
 __clib_export int
 clib_mem_set_default_numa_affinity ()
 {
+NOTIMPL
 #if 0
   clib_mem_main_t *mm = &clib_mem_main;
 

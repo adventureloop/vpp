@@ -260,10 +260,8 @@ dpdk_lib_init (dpdk_main_t * dm)
       check_l3cache () == 0)
     dm->default_port_conf.n_rx_desc = dm->default_port_conf.n_tx_desc = 512;
 
-printf("%s:%d dpdk_lib_init loops devices now\n", __func__, __LINE__);
   RTE_ETH_FOREACH_DEV (port_id)
     {
-printf("%s:%d dpdk_lib_init device\n", __func__, __LINE__);
       u8 addr[6];
       int rv, q;
       struct rte_eth_dev_info di;
@@ -321,7 +319,6 @@ printf("%s:%d dpdk_lib_init device\n", __func__, __LINE__);
 	    dpdk_device_flag_set (xd, DPDK_DEVICE_FLAG_INT_UNMASKABLE, 1);
 	}
       else {
-printf("%s:%d unknown driver %s\n", __func__, __LINE__, di.driver_name);
 	dpdk_log_warn ("[%u] unknown driver '%s'", port_id, di.driver_name);
 	}
       if (devconf->name)
@@ -444,6 +441,9 @@ printf("%s:%d unknown driver %s\n", __func__, __LINE__, di.driver_name);
 
       rte_eth_macaddr_get (port_id, (void *) addr);
 
+printf("%s:%d: mac address %x:%x:%x:%x:%x:%x\n", __func__, __LINE__,
+       addr[0], addr[1], addr[2], addr[3], addr[4], addr[5] );
+
       /* create interface */
       eir.dev_class_index = dpdk_device_class.index;
       eir.dev_instance = xd->device_index;
@@ -554,7 +554,6 @@ printf("%s:%d\n", __func__, __LINE__);
   /* *INDENT-OFF* */
   vec_foreach (addr, addrs)
     {
-printf("%s:%d\n", __func__, __LINE__);
     dpdk_device_config_t * devconf = 0;
     vec_reset_length (pci_addr);
     pci_addr = format (pci_addr, "%U%c", format_vlib_pci_addr, addr, 0);
@@ -568,24 +567,20 @@ printf("%s:%d\n", __func__, __LINE__);
     {
       vlib_log_warn (dpdk_main.log_default, "%U", format_clib_error, error);
       clib_error_free (error);
-printf("%s:%d error continuing\n", __func__, __LINE__);
       continue;
     }
 
-//    if (d->device_class != PCI_CLASS_NETWORK_ETHERNET && d->device_class != PCI_CLASS_PROCESSOR_CO) {
+#if 0
+    if (d->device_class != PCI_CLASS_NETWORK_ETHERNET && d->device_class != PCI_CLASS_PROCESSOR_CO) {
+#else
     if (d->device_class != PCI_CLASS_NETWORK && d->device_class != PCI_CLASS_PROCESSOR_CO) {
-printf("%s:%d not a network card %d ( ! %d && ! %d\n", __func__, __LINE__,
-	d->device_class, PCI_CLASS_NETWORK_ETHERNET, PCI_CLASS_PROCESSOR_CO);
+#endif
       continue;
-    } else
-	printf("%s:%d A NETWORK CARD!!!\n", __func__, __LINE__);
+    }
 
-printf("%s:%d\n", __func__, __LINE__);
     if (num_whitelisted)
       {
-printf("%s:%d\n", __func__, __LINE__);
 	uword * p = hash_get (conf->device_config_index_by_pci_addr, addr->as_u32);
-//I left here
 	if (!p)
           {
 	  skipped_pci:
@@ -598,7 +593,6 @@ printf("%s:%d\n", __func__, __LINE__);
     /* Enforce Device blacklist by vendor and device */
     for (i = 0; i < vec_len (conf->blacklist_by_pci_vendor_and_device); i++)
       {
-printf("%s:%d\n", __func__, __LINE__);
         u16 vendor, device;
         vendor = (u16)(conf->blacklist_by_pci_vendor_and_device[i] >> 16);
         device = (u16)(conf->blacklist_by_pci_vendor_and_device[i] & 0xFFFF);
@@ -610,7 +604,6 @@ printf("%s:%d\n", __func__, __LINE__);
              */
             if (devconf == 0)
               {
-printf("%s:%d blacklisted\n", __func__, __LINE__);
                 /* Device is blacklisted */
                 pool_get (conf->dev_confs, devconf);
                 hash_set (conf->device_config_index_by_pci_addr, addr->as_u32,
@@ -730,14 +723,11 @@ printf("%s:%d blacklisted\n", __func__, __LINE__);
         continue;
       }
 
-printf("%s:%d\n", __func__, __LINE__);
     error = vlib_pci_bind_to_uio (vm, addr, (char *) conf->uio_driver_name,
 				  conf->uio_bind_force);
 
-printf("%s:%d\n", __func__, __LINE__);
     if (error)
       {
-printf("%s:%d\n", __func__, __LINE__);
 	if (devconf == 0)
 	  {
 	    pool_get (conf->dev_confs, devconf);
@@ -750,7 +740,6 @@ printf("%s:%d\n", __func__, __LINE__);
 	clib_error_report (error);
       }
   }
-printf("%s:%d\n", __func__, __LINE__);
   /* *INDENT-ON* */
   vec_free (pci_addr);
   vlib_pci_free_device_info (d);
@@ -1032,27 +1021,33 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
   dpdk_main_t *dm = &dpdk_main;
   clib_error_t *error = 0;
   dpdk_config_main_t *conf = &dpdk_config_main;
-//  vlib_thread_main_t *tm = vlib_get_thread_main ();
   dpdk_device_config_t *devconf;
   vlib_pci_addr_t pci_addr = { 0 };
   vlib_vmbus_addr_t vmbus_addr = { 0 };
   unformat_input_t sub_input;
-//  uword default_hugepage_sz, x;
   u8 *s, *tmp = 0;
   int ret, i;
   int num_whitelisted = 0;
-  int eal_no_hugetlb = 0;	// TODO
+  int eal_no_hugetlb = 0;
   u8 no_pci = 0;
-  u8 no_vmbus = 1;		// TODO
-//  u8 file_prefix = 0;
   u8 *socket_mem = 0;
+#if 1
+  u8 no_vmbus = 1;		// TODO
+#else
+  u8 no_vmbus = 0;
+  vlib_thread_main_t *tm = vlib_get_thread_main ();
+  uword default_hugepage_sz, x;
+  u8 file_prefix = 0;
   u8 *huge_dir_path = 0;
+#endif
   u32 vendor, device, domain, bus, func;
   void *fmt_func;
   void *fmt_addr;
 
+#if 0
   huge_dir_path =
     format (0, "%s/hugepages%c", vlib_unix_get_runtime_dir (), 0);
+#endif
 
   conf->device_config_index_by_pci_addr = hash_create (0, sizeof (uword));
   mhash_init (&conf->device_config_index_by_vmbus_addr, sizeof (uword),
@@ -1061,15 +1056,11 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
   while (unformat_check_input (input) != UNFORMAT_END_OF_INPUT)
     {
       /* Prime the pump */
-#if 0
       if (unformat (input, "no-hugetlb"))
 	{
 	  vec_add1 (conf->eal_init_args, (u8 *) "--no-huge");
 	  eal_no_hugetlb = 1;
 	}
-      else 
-	  vec_add1 (conf->eal_init_args, (u8 *) "--no-huge");
-#endif
       if (unformat (input, "telemetry"))
 	conf->enable_telemetry = 1;
 
@@ -1240,9 +1231,13 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
 
   if (eal_no_hugetlb == 0)
     {
-#if 0
       vec_add1 (conf->eal_init_args, (u8 *) "--in-memory");
 
+#if 0
+      /*
+       * On FreeBSD DPDK has to use the contigmem driver which handles
+       * contiguous allocation of pages
+       */
       default_hugepage_sz = clib_mem_get_default_hugepage_size ();
 
       /* *INDENT-OFF* */
@@ -1258,8 +1253,8 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
 	  if ((e = clib_sysfs_prealloc_hugepages(x, 0, n_pages)))
 	    clib_error_report (e);
         }
-      /* *INDENT-ON* */
 #endif
+      /* *INDENT-ON* */
     }
 
   /* on/off dpdk's telemetry thread */
@@ -1287,10 +1282,8 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
       devconf->x = conf->default_devconf.x ;
 
   pool_foreach (devconf, conf->dev_confs)  {
-printf("%s:%d\n", __func__, __LINE__);
     /* default per-device config items */
     foreach_dpdk_device_config_item
-printf("%s:%d\n", __func__, __LINE__);
 
       /* copy tso config from default device */
       _ (tso)
@@ -1310,7 +1303,6 @@ printf("%s:%d\n", __func__, __LINE__);
 	fmt_func = format_vlib_vmbus_addr;
 	fmt_addr = &devconf->vmbus_addr;
       }
-printf("%s:%d num_whitelisted %d devconf->is_blacklisted %d\n", __func__, __LINE__, num_whitelisted, devconf->is_blacklisted);
     /* add DPDK EAL whitelist/blacklist entry */
     if (num_whitelisted > 0 && devconf->is_blacklisted == 0)
       {
@@ -1380,6 +1372,7 @@ printf("%s:%d num_whitelisted %d devconf->is_blacklisted %d\n", __func__, __LINE
   vec_terminate_c_string (conf->eal_init_args_str);
 printf("EAL init args: %s\n", conf->eal_init_args_str);
   dpdk_log_notice ("EAL init args: %s", conf->eal_init_args_str);
+
   ret = rte_eal_init (vec_len (conf->eal_init_args),
 		      (char **) conf->eal_init_args);
   if (ret < 0)
@@ -1398,10 +1391,6 @@ printf("EAL init args: %s\n", conf->eal_init_args_str);
 #if 0
   /* lazy umount hugepages */
   umount2 ((char *) huge_dir_path, MNT_DETACH);
-  rmdir ((char *) huge_dir_path);
-  vec_free (huge_dir_path);
-#else
-  unmount ((char *) huge_dir_path, 0);
   rmdir ((char *) huge_dir_path);
   vec_free (huge_dir_path);
 #endif

@@ -16,6 +16,9 @@
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <sys/types.h>
+#if 1
+#include <sys/memrange.h>
+#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -34,6 +37,8 @@
 #define DEFAULT_RESERVED_MB 256
 #endif
 
+#define NOTIMPL printf("%s:%d: Not implemented\n", __func__, __LINE__); __builtin_debugtrap();
+
 static inline clib_pmalloc_chunk_t *
 get_chunk (clib_pmalloc_page_t * pp, u32 index)
 {
@@ -49,6 +54,7 @@ pmalloc_size2pages (uword size, u32 log2_page_sz)
 __clib_export int
 clib_pmalloc_init (clib_pmalloc_main_t * pm, uword base_addr, uword size)
 {
+NOTIMPL
   uword base, pagesize;
   u64 *pt = 0;
 
@@ -69,7 +75,6 @@ clib_pmalloc_init (clib_pmalloc_main_t * pm, uword base_addr, uword size)
   pm->max_pages = size >> pm->def_log2_page_sz;
 
   base = clib_mem_vm_reserve (base_addr, size, pm->def_log2_page_sz);
-//printf("base is %lu (and not %d\n", base, ~0);
   if (base == ~0)
     {
       pm->error = clib_error_return (0, "failed to reserve %u pages",
@@ -78,7 +83,7 @@ clib_pmalloc_init (clib_pmalloc_main_t * pm, uword base_addr, uword size)
     }
 
   pm->base = uword_to_pointer (base, void *);
-//printf("base is %lu (and not %d\n", base, ~0);
+
   return 0;
 }
 
@@ -185,7 +190,12 @@ next_chunk:
 static void
 pmalloc_update_lookup_table (clib_pmalloc_main_t * pm, u32 first, u32 count)
 {
+#if 0
   uword seek, va, pa, p;
+#else
+  struct mem_extract meme;
+  uword p;
+#endif
   int fd;
   u32 elts_per_page = 1U << (pm->def_log2_page_sz - pm->lookup_log2_page_sz);
 
@@ -204,6 +214,24 @@ pmalloc_update_lookup_table (clib_pmalloc_main_t * pm, u32 first, u32 count)
       return;
     }
 
+#if 1
+  fd = open ((char *) "/dev/mem", O_RDONLY);
+  if (fd == -1)
+    return;
+
+  while (p < (uword) elts_per_page * count)
+    {
+	meme.me_vaddr = pointer_to_uword (pm->base) +
+		(p << pm->lookup_log2_page_sz);
+	if (ioctl (fd, MEM_EXTRACT_PADDR, &meme) == -1) {
+		printf("%s:%d failed to look up physical address for %lx\n",
+		__func__, __LINE__, meme.me_vaddr);
+		__builtin_debugtrap();
+	}
+	pm->lookup_table[p] = meme.me_vaddr - meme.me_paddr;
+	p++;
+    }
+#else
   fd = open ((char *) "/proc/self/pagemap", O_RDONLY);
   while (p < (uword) elts_per_page * count)
     {
@@ -220,6 +248,7 @@ pmalloc_update_lookup_table (clib_pmalloc_main_t * pm, u32 first, u32 count)
       p++;
     }
 
+#endif
   if (fd != -1)
     close (fd);
 }
@@ -248,8 +277,6 @@ pmalloc_map_pages (clib_pmalloc_main_t * pm, clib_pmalloc_arena_t * a,
     {
       pm->error = clib_sysfs_prealloc_hugepages (numa_node,
 						 a->log2_subpage_sz, n_pages);
-
-//printf("%s:%d\n", __func__, __LINE__);
       if (pm->error)
 	return 0;
     }
@@ -259,7 +286,6 @@ pmalloc_map_pages (clib_pmalloc_main_t * pm, clib_pmalloc_arena_t * a,
     {
       pm->error = clib_error_return_unix (0, "failed to set mempolicy for "
 					  "numa node %u", numa_node);
-//printf("%s:%d\n", __func__, __LINE__);
       return 0;
     }
 
@@ -276,29 +302,21 @@ pmalloc_map_pages (clib_pmalloc_main_t * pm, clib_pmalloc_arena_t * a,
     }
   else
     {
-//      if (a->log2_subpage_sz != clib_mem_get_log2_page_size ())
-//	mmap_flags |= MAP_HUGETLB;
-
+#if 0
+      if (a->log2_subpage_sz != clib_mem_get_log2_page_size ())
+	mmap_flags |= MAP_HUGETLB;
+#endif
       mmap_flags |= MAP_PRIVATE | MAP_ANONYMOUS;
       a->fd = -1;
     }
-
-//- pm->base should not be 0 here
-//- pm->pages should be initialised to some value
   va = pm->base + (((uword) vec_len (pm->pages)) << pm->def_log2_page_sz);
   if (mmap (va, size, PROT_READ | PROT_WRITE, mmap_flags, a->fd, 0) ==
       MAP_FAILED)
     {
-//MAP_FIXED above seem to indicate that pm->base can't ever be 0 (or the va
-//calcuation). We aren't getting it correctly *siomewhere*
-
-
-    	__builtin_debugtrap();
       pm->error = clib_error_return_unix (0, "failed to mmap %u pages at %p "
 					  "fd %d numa %d flags 0x%x", n_pages,
 					  va, a->fd, numa_node, mmap_flags);
       va = MAP_FAILED;
-//printf("%s:%d\n", __func__, __LINE__);
       goto error;
     }
 
@@ -315,7 +333,6 @@ pmalloc_map_pages (clib_pmalloc_main_t * pm, clib_pmalloc_arena_t * a,
   if (rv == CLIB_MEM_ERROR && numa_node != 0)
     {
       pm->error = clib_error_return_unix (0, "failed to restore mempolicy");
-//printf("%s:%d ERORR label\n", __func__, __LINE__);
       goto error;
     }
 
@@ -339,9 +356,6 @@ pmalloc_map_pages (clib_pmalloc_main_t * pm, clib_pmalloc_arena_t * a,
 			 "page allocated on the wrong numa node (%u), "
 			 "expected %u",
 			 allocated_at, numa_node);
-
-//printf("%s:%d ERROR LABEL page allocted on wrong numa node at %d expected %d \n", __func__, __LINE__,
-//allocated_at, numa_node);
       goto error;
     }
 
@@ -354,7 +368,6 @@ pmalloc_map_pages (clib_pmalloc_main_t * pm, clib_pmalloc_arena_t * a,
       vec_add1 (a->page_indices, pp->index);
       a->n_pages++;
     }
-
 
   /* if new arena is using smaller page size, we need to rebuild whole
      lookup table */
@@ -392,7 +405,6 @@ clib_pmalloc_create_shared_arena (clib_pmalloc_main_t * pm, char *name,
   clib_pmalloc_page_t *pp;
   u32 n_pages;
 
-//printf("%s:%d\n", __func__, __LINE__);
   clib_error_free (pm->error);
 
   if (log2_page_sz == 0)
@@ -404,20 +416,15 @@ clib_pmalloc_create_shared_arena (clib_pmalloc_main_t * pm, char *name,
 				     1 << (log2_page_sz - 10));
       return 0;
     }
-//printf("%s:%d\n", __func__, __LINE__);
 
   n_pages = pmalloc_size2pages (size, pm->def_log2_page_sz);
 
   if (n_pages + vec_len (pm->pages) > pm->max_pages) {
-//printf("%s:%d, n_pages %d vec_len (pm->pages) %d, pm->max_pages %d test %d\n", __func__, __LINE__,
-//n_pages,  vec_len (pm->pages), pm->max_pages, (n_pages + vec_len (pm->pages) > pm->max_pages));
     return 0;
   }
-//printf("%s:%d\n", __func__, __LINE__);
 
   if (numa_node == CLIB_PMALLOC_NUMA_LOCAL)
     numa_node = clib_get_current_numa_node ();
-//printf("%s:%d\n", __func__, __LINE__);
 
   pool_get (pm->arenas, a);
   a->index = a - pm->arenas;
@@ -432,10 +439,8 @@ clib_pmalloc_create_shared_arena (clib_pmalloc_main_t * pm, char *name,
       vec_free (a->name);
       memset (a, 0, sizeof (*a));
       pool_put (pm->arenas, a);
-//printf("%s:%d\n", __func__, __LINE__);
       return 0;
     }
-//printf("%s:%d\n", __func__, __LINE__);
 
   return pm->base + ((uword) pp->index << pm->def_log2_page_sz);
 }

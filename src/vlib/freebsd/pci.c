@@ -155,6 +155,7 @@ void
 vlib_pci_set_private_data (vlib_main_t * vm, vlib_pci_dev_handle_t h,
 			   uword private_data)
 {
+	NOTIMPL
 }
 
 vlib_pci_addr_t *
@@ -191,7 +192,6 @@ vlib_pci_get_device_info (vlib_main_t * vm, vlib_pci_addr_t * addr,
 {
 /* Populate a vlib_pci_device_info_t from the given address */
 
-printf("%s:%d request for address 0x%08x\n", __func__, __LINE__, addr->as_u32);
   clib_error_t *err = NULL;
   vlib_pci_device_info_t *di = NULL;
 
@@ -229,10 +229,8 @@ printf("%s:%d request for address 0x%08x\n", __func__, __LINE__, addr->as_u32);
     err = clib_error_return_unix (0, "reading PCIOCGETCONF");
     goto error;
   }                                     
-  printf("%s:%d Read PCIOCGETCONF, returned %d matches\n", __func__, __LINE__, pci.num_matches);  
 
   if (pci.num_matches != 1) {
-printf("%s:%d expected 1 match returned\n", __func__, __LINE__);
     __builtin_debugtrap();
     goto error;
   }
@@ -281,22 +279,15 @@ clib_error_t *
 vlib_pci_bind_to_uio (vlib_main_t *vm, vlib_pci_addr_t *addr,
 		      char *uio_drv_name, int force)
 {
-printf("%s:%d\t#####\tNOT IMPLEMENTED\t#####\n", __func__, __LINE__);
   clib_error_t *error = 0;
-  vlib_pci_device_info_t *di;
-  
-  di = vlib_pci_get_device_info (vm, addr, &error);
 
   if (error) {
-printf("%s:%d error getting pci device\n", __func__, __LINE__);
     return error;
   }
-printf("%s:%d got device: %s\n", __func__, __LINE__, di->driver_name);
 
   if (strncmp("auto", uio_drv_name, 5) == 0) {
-printf("%s:%d uio_drv_name 'auto'\n", __func__, __LINE__);
 
-// TODO: Should confirm that nic_uio is loaded here
+// TODO: Should confirm that nic_uio is loaded here and return an error
     uio_drv_name = "nic_uio";
   }
 
@@ -486,16 +477,15 @@ vlib_pci_get_all_dev_addrs ()
     close(fd);
     return (NULL);
   }                                     
-  printf("Read PCIOCGETCONF, returned %d matches\n", pci.num_matches);  
 
   for (int i = 0; i < pci.num_matches; i++) {    
     struct pci_conf *m = &pci.matches[i];
     vlib_pci_addr_t addr;
-
+#if 0
     printf("%d: class=%x subclass=%x rev=%x hdr=%x vendor=%x device=%x subvendor=%x subdevice=%x\n",
             i, m->pc_class, m->pc_subclass, m->pc_revid, m->pc_hdr, m->pc_vendor,
 	            m->pc_device, m->pc_subvendor, m->pc_subdevice);
-
+#endif
 
     addr.domain = m->pc_sel.pc_domain;
     addr.bus = m->pc_sel.pc_bus;

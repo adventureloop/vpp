@@ -22,7 +22,7 @@ STARTUP_DIR?=$(PWD)
 MACHINE=$(shell uname -m)
 SUDO?=sudo -E
 #DPDK_CONFIG?=no-pci
-DPDK_CONFIG?="dev 0000:00:03.0"
+DPDK_CONFIG?="dev 0000:00:03.0 dev 0000:00:04.0"
 
 ,:=,
 define disable_plugins
@@ -38,7 +38,8 @@ unix { 									\
 	interactive 							\
 	cli-listen /run/vpp/cli.sock					\
 	gid $(shell id -g)						\
-	$(if $(wildcard startup.vpp),"exec startup.vpp",)		\
+	poll-sleep-usec 100                                             \
+	$(if $(wildcard startup.vpp),"exec /home/tj/code/vpp/vpp/startup.vpp",)		\
 } 									\
 $(if $(DPDK_CONFIG), "dpdk { $(DPDK_CONFIG) }",)			\
 $(if $(EXTRA_VPP_CONFIG), "$(EXTRA_VPP_CONFIG)",)			\

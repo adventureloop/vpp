@@ -162,7 +162,6 @@ mfib_itf_mac_add_del (mfib_itf_t *itf,
 
     vnm = vnet_get_main();
     mfib_itf_prefix_to_mac(pfx, &mac);
-
     si = vnet_get_sw_interface(vnm, itf->mfi_sw_if_index);
     vnet_hw_interface_add_del_mac_address (vnet_get_main(),
                                            si->hw_if_index,
