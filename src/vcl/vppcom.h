@@ -22,7 +22,11 @@
 #include <fcntl.h>
 #include <poll.h>
 
+#ifdef __FreeBSD__
+#include <libepoll-shim/sys/epoll.h>
+#else
 #include <sys/epoll.h>
+#endif
 
 /* clang-format off */
 

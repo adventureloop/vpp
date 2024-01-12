@@ -1026,7 +1026,7 @@ quic_on_stream_open (quicly_stream_open_t * self, quicly_stream_t * stream)
   sctx->c_c_index = sctx_id;
   sctx->c_s_index = stream_session->session_index;
   sctx->stream = stream;
-  sctx->c_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
+  sctx->flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
   sctx->flags |= QUIC_F_IS_STREAM;
   sctx->crypto_context_index = qctx->crypto_context_index;
   if (quicly_stream_is_unidirectional (stream->stream_id))
@@ -1254,7 +1254,7 @@ quic_connect_stream (session_t * quic_session, session_endpoint_cfg_t * sep)
   sctx->parent_app_id = qctx->parent_app_id;
   sctx->quic_connection_ctx_id = qctx->c_c_index;
   sctx->c_c_index = sctx_index;
-  sctx->c_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
+  sctx->flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
   sctx->flags |= QUIC_F_IS_STREAM;
 
   conn = qctx->conn;
@@ -1348,7 +1348,7 @@ quic_connect_connection (session_endpoint_cfg_t * sep)
   ctx->timer_handle = QUIC_TIMER_HANDLE_INVALID;
   ctx->conn_state = QUIC_CONN_STATE_HANDSHAKE;
   ctx->client_opaque = sep->opaque;
-  ctx->c_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
+  ctx->flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
   if (ccfg->hostname[0])
     ctx->srv_hostname = format (0, "%s", ccfg->hostname);
   else
@@ -1932,7 +1932,7 @@ quic_udp_session_accepted_callback (session_t * udp_session)
   ctx->parent_app_wrk_id = lctx->parent_app_wrk_id;
   ctx->timer_handle = QUIC_TIMER_HANDLE_INVALID;
   ctx->conn_state = QUIC_CONN_STATE_OPENED;
-  ctx->c_flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
+  ctx->flags |= TRANSPORT_CONNECTION_F_NO_LOOKUP;
 
   ctx->crypto_engine = lctx->crypto_engine;
   ctx->ckpair_index = lctx->ckpair_index;

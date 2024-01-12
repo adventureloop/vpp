@@ -53,7 +53,7 @@ set(FREEBSD_LIBS "")
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
   find_path(EPOLL_SHIM_INCLUDE_DIR NAMES libepoll-shim/sys/epoll.h HINTS /usr/local/include)
   find_library(EPOLL_SHIM_LIB NAMES epoll-shim HINTS /usr/local/lib)
-  
+
   if(EPOLL_SHIM_INCLUDE_DIR AND EPOLL_SHIM_LIB)
     message(STATUS "Found epoll-shim in ${EPOLL_SHIM_INCLUDE_DIR}")
     include_directories(${EPOLL_SHIM_INCLUDE_DIR})

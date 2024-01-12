@@ -25,6 +25,11 @@
 #include <vnet/fib/ip4_fib.h>
 #include "../pnat.h"
 #include <pnat/pnat.api_enum.h> /* For error counters */
+#if 1
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#endif
 #include <arpa/inet.h>
 #include "pnat_test_stubs.h"
 

@@ -19,7 +19,11 @@
 #include <vnet/session/session.h>
 #include <vnet/session/session_rules_table.h>
 #include <vnet/tcp/tcp.h>
+#ifdef __FreeBSD__
+#include <libepoll-shim/sys/epoll.h>
+#else
 #include <sys/epoll.h>
+#endif
 
 #define SESSION_TEST_I(_cond, _comment, _args...)		\
 ({								\

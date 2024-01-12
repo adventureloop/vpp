@@ -92,7 +92,8 @@ vl_api_dhcp6_duid_ll_set_t_handler (vl_api_dhcp6_duid_ll_set_t * mp)
   int rv = 0;
 
   duid = (dhcpv6_duid_ll_string_t *) mp->duid_ll;
-  if (duid->duid_type != htonl (DHCPV6_DUID_LL))
+//  if (duid->duid_type != htonl (DHCPV6_DUID_LL))	clang doesn't like this comparison
+  if (duid->duid_type != DHCPV6_DUID_LL)
     {
       rv = VNET_API_ERROR_INVALID_VALUE;
       goto reply;

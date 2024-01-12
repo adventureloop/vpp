@@ -32,7 +32,7 @@ set(VPP_EXCLUDED_PLUGINS
 
 # create the list of the plugins that we need to exclude from packaging
 #SET(excluded_plugins "")
-SET(excluded_plugins "hs_apps;af_packet;dhcp;fateshare;memif;nat;perfmon;quic;tlsopenssl;unittest;vhost")
+SET(excluded_plugins "hs_apps;af_packet;fateshare;perfmon;tlsopenssl;vhost")
 STRING(REGEX REPLACE "[,]+" ";" exc_plugins "${VPP_EXCLUDED_PLUGINS}")
 foreach (e ${exc_plugins})
   message(WARNING "Excluding plugin due to VPP_EXCLUDED_PLUGINS: '${e}'")
