@@ -13,15 +13,23 @@
  * limitations under the License.
  */
 
+#include <sys/cdefs.h>
+#define _WANT_FREEBSD_BITSET
+
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/cpuset.h>
+#include <sys/domainset.h>
+
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dirent.h>
+
 #include <vppinfra/clib.h>
 #include <vppinfra/clib_error.h>
 #include <vppinfra/format.h>
 #include <vppinfra/bitmap.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
 
 #define NOTIMPL printf("%s:%d: Not implemented\n", __func__, __LINE__);// __builtin_debugtrap();
 
@@ -274,34 +282,43 @@ printf("%s:%d I think this is our candidate problem\n", __func__, __LINE__);
 }
 
 __clib_export uword *
-clib_sysfs_list_to_bitmap (char *filename)
+freebsd_get_cpu_bitmap(void)
 {
-NOTIMPL
-#if 0
-  FILE *fp;
-  uword *r = 0;
+  cpuset_t mask;
+  uword *r = NULL;
 
-  fp = fopen (filename, "r");
+  clib_bitmap_alloc(r, CPU_SETSIZE);
 
-  if (fp != NULL)
-    {
-      u8 *buffer = 0;
-      vec_validate (buffer, 256 - 1);
-      if (fgets ((char *) buffer, 256, fp))
-	{
-	  unformat_input_t in;
-	  unformat_init_string (&in, (char *) buffer,
-				strlen ((char *) buffer));
-	  if (unformat (&in, "%U", unformat_bitmap_list, &r) != 1)
-	    clib_warning ("unformat_bitmap_list failed");
-	  unformat_free (&in);
-	}
-      vec_free (buffer);
-      fclose (fp);
-    }
+  if (cpuset_getaffinity(CPU_LEVEL_CPUSET, CPU_WHICH_CPUSET, -1, sizeof(mask), &mask) != 0) {
+    clib_bitmap_free(r);
+    return NULL;
+  }
+
+  for (int bit = 0; bit < CPU_SETSIZE; bit++)
+      clib_bitmap_set(r, bit, CPU_ISSET(bit, (struct bitset *)&mask));
+
   return r;
-#endif  
-	return NULL;
+}
+
+__clib_export uword *
+freebsd_get_domain_bitmap(void)
+{
+  domainset_t domain;
+  uword *r = NULL;
+  int policy;
+
+  clib_bitmap_alloc(r, CPU_SETSIZE);
+
+  if (cpuset_getdomain(CPU_LEVEL_CPUSET, CPU_WHICH_CPUSET, -1,
+    sizeof(domain), &domain, &policy) != 0) {
+    clib_bitmap_free(r);
+    return NULL;
+  }
+
+  for (int bit = 0; bit < CPU_SETSIZE; bit++)
+      clib_bitmap_set(r, bit, CPU_ISSET(bit, (struct bitset *)&domain));
+
+  return r;
 }
 
 /*

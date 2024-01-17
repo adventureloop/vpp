@@ -32,8 +32,12 @@ clib_error_t *clib_sysfs_get_surplus_hugepages (int numa_node,
 						int log2_page_size, int *v);
 clib_error_t *clib_sysfs_prealloc_hugepages (int numa_node,
 					     int log2_page_size, int nr);
-
+#if 0
 uword *clib_sysfs_list_to_bitmap (char *filename);
+#else
+uword * freebsd_get_cpu_bitmap(void);
+uword * freebsd_get_domain_bitmap(void);
+#endif
 
 #endif /* included_linux_sysfs_h */
 
