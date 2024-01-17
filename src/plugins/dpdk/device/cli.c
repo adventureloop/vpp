@@ -21,7 +21,6 @@
 #include <vppinfra/error.h>
 #include <vppinfra/format.h>
 #include <vppinfra/xxhash.h>
-#include <vppinfra/freebsd/sysfs.c>
 
 #include <vnet/ethernet/ethernet.h>
 #include <dpdk/buffer.h>
@@ -97,8 +96,10 @@ show_dpdk_physmem (vlib_main_t * vm, unformat_input_t * input,
   int n, n_try;
   FILE *f;
 
+#if 0
   err = clib_sysfs_read ("/proc/sys/fs/pipe-max-size", "%u", &pipe_max_size);
-
+#endif
+  pipe_max_size = 0;
   if (err)
     return err;
 
