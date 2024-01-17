@@ -31,6 +31,9 @@
 #include <vlib/stats/stats.h>
 
 #include <sys/thr.h>
+#ifdef __FreeBSD__
+#include <pthread_np.h>
+#endif	/* __FreeBSD__ */
 
 u32
 vl (void *p)
@@ -235,7 +238,7 @@ vlib_thread_init (vlib_main_t * vm)
       cpu_set_t cpuset;
       CPU_ZERO (&cpuset);
       CPU_SET (tm->main_lcore, &cpuset);
-//      pthread_setaffinity_np (pthread_self (), sizeof (cpu_set_t), &cpuset);
+      pthread_setaffinity_np (pthread_self (), sizeof (cpu_set_t), &cpuset);
     }
 
   /* Set up thread 0 */
@@ -245,7 +248,11 @@ vlib_thread_init (vlib_main_t * vm)
   w->thread_mheap = clib_mem_get_heap ();
   w->thread_stack = vlib_thread_stacks[0];
   w->cpu_id = tm->main_lcore;
-//  w->lwp = syscall (SYS_gettid);
+#ifdef __FreeBSD__
+  w->lwp = pthread_getthreadid_np();
+#else
+  w->lwp = syscall (SYS_gettid);
+#endif
   thr_self(&(w->lwp));
   w->thread_id = pthread_self ();
   tm->n_vlib_mains = 1;
@@ -516,8 +523,8 @@ vlib_launch_thread_int (void *fp, vlib_worker_thread_t * w, unsigned cpu_id)
       if (pthread_create (&worker, &attr, fp_arg, (void *) w))
 	return clib_error_return_unix (0, "pthread_create");
 
-//      if (pthread_setaffinity_np (worker, sizeof (cpu_set_t), &cpuset))
-//	return clib_error_return_unix (0, "pthread_setaffinity_np");
+      if (pthread_setaffinity_np (worker, sizeof (cpu_set_t), &cpuset))
+	return clib_error_return_unix (0, "pthread_setaffinity_np");
 
       if (pthread_attr_destroy (&attr))
 	return clib_error_return_unix (0, "pthread_attr_destroy");
