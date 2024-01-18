@@ -436,9 +436,9 @@ rebuild-release: wipe-release build-release
 export TEST_DIR ?= $(WS_ROOT)/test
 
 define test
-	$(if $(filter-out $(2),retest),make -C $(BR) PLATFORM=vpp TAG=$(1) CC=$(CC) vpp-install,)
+	$(if $(filter-out $(2),retest),gmake -C $(BR) PLATFORM=vpp TAG=$(1) CC=$(CC) vpp-install,)
 	$(eval libs:=lib lib64)
-	make -C test \
+	gmake -C test \
 	  VPP_BUILD_DIR=$(BR)/build-$(1)-native/vpp \
 	  VPP_BIN=$(BR)/install-$(1)-native/vpp/bin/vpp \
 	  VPP_INSTALL_PATH=$(BR)/install-$(1)-native/ \
