@@ -199,7 +199,9 @@ ifneq ($(wildcard $(STARTUP_DIR)/startup.conf),)
         STARTUP_CONF ?= $(STARTUP_DIR)/startup.conf
 endif
 
-FBSD_DEPENDS = py39-ply gmake gsed
+FBSD_DEPENDS = py39-ply git gmake gsed cmake
+# for tests
+FBSD_DEPENDS += setsid py39-pyshark
 
 ifeq ($(findstring y,$(UNATTENDED)),y)
 DEBIAN_FRONTEND=noninteractive
