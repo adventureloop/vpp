@@ -589,7 +589,7 @@ clib_socket_init (clib_socket_t *s)
 	{
 	  if (S_ISSOCK (st.st_mode))
 	    {
-	      int client_fd = socket (AF_UNIX, SOCK_STREAM, 0);
+	      int client_fd = socket (AF_UNIX, SOCK_SEQPACKET, 0);
 	      int ret = connect (client_fd, (const struct sockaddr *) &su,
 				 sizeof (su));
 	      typeof (errno) connect_errno = errno;
@@ -697,12 +697,14 @@ clib_socket_init (clib_socket_t *s)
 
       if (s->local_only && s->allow_group_write)
 	{
+#if 0
 	  if (fchmod (s->fd, S_IWGRP) < 0)
 	    {
 	      err = clib_error_return_unix (
 		0, "fchmod (fd %d, '%s', mode S_IWGRP)", s->fd, s->config);
 	      goto done;
 	    }
+#endif
 	}
     }
   else
