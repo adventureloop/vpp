@@ -1,5 +1,6 @@
 import os
 import time
+import socket
 from socket import inet_pton
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
