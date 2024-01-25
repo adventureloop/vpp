@@ -82,10 +82,10 @@ fi
 in=$(mktemp)
 git diff ${GIT_DIFF_ARGS} ${GIT_DIFF_EXCLUDE_LIST[@]} > ${in}
 
-line_count=$(sed -n '/^+.*\*INDENT-O[NF][F]\{0,1\}\*/p' ${in} | wc -l)
+line_count=$(gsed -n '/^+.*\*INDENT-O[NF][F]\{0,1\}\*/p' ${in} | wc -l)
 if [ ${line_count} -gt 0 ] ; then
     echo
-    sed -n '/^+++ /{h}; /^+.*\*INDENT-O[NF][F]\{0,1\}\*/{x;p;x;p;}' ${in}
+    gsed -n '/^+++ /{h}; /^+.*\*INDENT-O[NF][F]\{0,1\}\*/{x;p;x;p;}' ${in}
     echo
     echo "*******************************************************************"
     echo "* CHECKSTYLE FAILED"
@@ -97,16 +97,16 @@ fi
 
 if [ "${1}" == "--fix" ]; then
   cat ${in} | ${CLANG_FORMAT_DIFF} ${CLANG_FORMAT_DIFF_ARGS} -i
-  filelist=$(sed -n 's/^+++ b\/\(.*\.[ch]\)/\1/p' ${in})
+  filelist=$(gsed -n 's/^+++ b\/\(.*\.[ch]\)/\1/p' ${in})
   git status ${filelist}
   rm ${in}
   exit 0
 fi
 
-line_count=$(sed -n '/^+.*\s\+$/p' ${in} | wc -l)
+line_count=$(gsed -n '/^+.*\s\+$/p' ${in} | wc -l)
 if [ ${line_count} -gt 0 ] ; then
     echo
-    sed -n '/^+++/h; /^+.*\s\+$/{x;p;x;p;}' ${in}
+    gsed -n '/^+++/h; /^+.*\s\+$/{x;p;x;p;}' ${in}
     echo
     echo "*******************************************************************"
     echo "* CHECKSTYLE FAILED"
