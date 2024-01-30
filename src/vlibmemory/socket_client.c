@@ -25,6 +25,8 @@
 #ifdef __FreeBSD__
 #define _WANT_UCRED
 #include <sys/types.h>
+#include <sys/param.h>
+#include <sys/ucred.h>
 #include <sys/un.h>
 #endif /* __FreeBSD__ */
 
