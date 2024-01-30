@@ -1108,7 +1108,8 @@ list(APPEND VNET_API_FILES feature/feature.api)
 ##############################################################################
 
 # FIXME: unix/hgshm.c
-
+# Only build on Linux for now
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 list(APPEND VNET_SOURCES
   unix/gdb_funcs.c
   unix/tuntap.c
@@ -1117,6 +1118,7 @@ list(APPEND VNET_SOURCES
 list(APPEND VNET_HEADERS
   unix/tuntap.h
 )
+endif()
 
 ##############################################################################
 # FIB
