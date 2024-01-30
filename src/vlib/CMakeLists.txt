@@ -115,6 +115,9 @@ add_vpp_library(vlib
   linux/vfio.c
   linux/vmbus.c
 
+  FREEBSD_SOURCES
+  freebsd/pci.c
+
   MULTIARCH_SOURCES
   buffer_funcs.c
   drop.c
