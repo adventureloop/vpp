@@ -217,7 +217,6 @@ set(VPPINFRA_HEADERS
   vector_sse42.h
   warnings.h
   xxhash.h
-  linux/sysfs.h
 )
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
@@ -227,11 +226,18 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     linux/sysfs.c
     linux/netns.c
    )
+  list(APPEND VPPINFRA_HEADERS
+    linux/sysfs.h
+  )
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
   list(APPEND VPPINFRA_SRCS
     elf_clib.c
     freebsd/mem.c
+    freebsd/system.c
    )
+  list(APPEND VPPINFRA_HEADERS
+    freebsd/system.h
+  )
 endif()
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
