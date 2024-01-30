@@ -110,6 +110,11 @@ add_vpp_library(vlib
   dma/dma.c
   dma/cli.c
 
+  LINUX_SOURCES
+  linux/pci.c
+  linux/vfio.c
+  linux/vmbus.c
+
   MULTIARCH_SOURCES
   buffer_funcs.c
   drop.c
@@ -152,6 +157,9 @@ add_vpp_library(vlib
   vlib.h
   vmbus/vmbus.h
 
+  LINUX_HEADERS
+  linux/vfio.h
+
   API_FILES
   pci/pci_types.api
 
@@ -159,15 +167,3 @@ add_vpp_library(vlib
 
   DEPENDS api_headers
 )
-
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
-add_vpp_library(vlib
-  SOURCES
-  linux/pci.c
-  linux/vfio.c
-  linux/vmbus.c
-
-  INSTALL_HEADERS
-  linux/vfio.h
-)
-endif()
