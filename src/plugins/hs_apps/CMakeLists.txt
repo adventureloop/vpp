@@ -12,6 +12,21 @@
 # limitations under the License.
 
 ##############################################################################
+# FreeBSD - use epoll-shim
+##############################################################################
+set(FREEBSD_LIBS "")
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
+  find_path(EPOLL_SHIM_INCLUDE_DIR NAMES sys/epoll.h HINTS /usr/local/include/libepoll-shim)
+  find_library(EPOLL_SHIM_LIB NAMES epoll-shim HINTS /usr/local/lib)
+
+  if(EPOLL_SHIM_INCLUDE_DIR AND EPOLL_SHIM_LIB)
+    message(STATUS "Found epoll-shim in ${EPOLL_SHIM_INCLUDE_DIR}")
+    include_directories(${EPOLL_SHIM_INCLUDE_DIR})
+    string(JOIN " " FREEBSD_LIBS "${EPOLL_SHIM_LIB}")
+  endif()
+endif()
+
+##############################################################################
 # vpp builtin hs apps
 ##############################################################################
 add_vpp_plugin(hs_apps
@@ -55,7 +70,7 @@ if(VPP_BUILD_VCL_TESTS)
   )
     add_vpp_executable(${test}
       SOURCES "vcl/${test}.c"
-      LINK_LIBRARIES vppcom pthread
+      LINK_LIBRARIES vppcom pthread ${FREEBSD_LIBS}
       NO_INSTALL
     )
   endforeach()
@@ -68,7 +83,7 @@ if(VPP_BUILD_VCL_TESTS)
       SOURCES
       "vcl/${test}.c"
       vcl/vcl_test_protos.c
-      LINK_LIBRARIES vppcom pthread
+      LINK_LIBRARIES vppcom pthread ${FREEBSD_LIBS}
       NO_INSTALL
     )
   endforeach()
