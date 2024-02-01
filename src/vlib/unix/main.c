@@ -621,7 +621,11 @@ vlib_unix_main (int argc, char *argv[])
 
   vec_validate_aligned (vgm->vlib_mains, 0, CLIB_CACHE_LINE_BYTES);
 
+#if __linux__
   if ((i = readlink ("/proc/self/exe", buffer, sizeof (buffer) - 1)) > 0)
+#else
+  if ((i = vlib_unix_get_exec_path (buffer, sizeof (buffer) - 1)) > 0)
+#endif /* __linux__ */
     {
       int j;
       buffer[i] = 0;
