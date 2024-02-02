@@ -1029,21 +1029,21 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
   dpdk_main_t *dm = &dpdk_main;
   clib_error_t *error = 0;
   dpdk_config_main_t *conf = &dpdk_config_main;
-  vlib_thread_main_t *tm = vlib_get_thread_main ();
   dpdk_device_config_t *devconf;
   vlib_pci_addr_t pci_addr = { 0 };
   vlib_vmbus_addr_t vmbus_addr = { 0 };
   unformat_input_t sub_input;
-  uword default_hugepage_sz, x;
   u8 *s, *tmp = 0;
   int ret, i;
   int num_whitelisted = 0;
   int eal_no_hugetlb = 0;
   u8 no_pci = 0;
   u8 no_vmbus = 0;
-  u8 file_prefix = 0;
   u8 *socket_mem = 0;
 #ifdef __linux__
+  u8 file_prefix = 0;
+  vlib_thread_main_t *tm = vlib_get_thread_main ();
+  uword default_hugepage_sz, x;
   u8 *huge_dir_path = 0;
 #endif /* __linux__ */
   u32 vendor, device, domain, bus, func;
@@ -1196,6 +1196,7 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
         }
       foreach_eal_double_hyphen_predicate_arg
 #undef _
+#if __linux__
 #define _(a)                                          \
 	else if (unformat(input, #a " %s", &s))	      \
 	  {					      \
@@ -1211,6 +1212,7 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
 	  }
 	foreach_eal_double_hyphen_arg
 #undef _
+#endif /* __linux__ */
 #define _(a,b)						\
 	  else if (unformat(input, #a " %s", &s))	\
 	    {						\
@@ -1237,6 +1239,11 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
     {
       vec_add1 (conf->eal_init_args, (u8 *) "--in-memory");
 
+#ifdef __linux__
+      /*
+       * FreeBSD doesn't have an equivalent API, however contiguous memory
+       * allocation is handled by a kernel module to achieve a similar effect
+       */
       default_hugepage_sz = clib_mem_get_default_hugepage_size ();
 
       /* *INDENT-OFF* */
@@ -1253,6 +1260,7 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
 	    clib_error_report (e);
         }
       /* *INDENT-ON* */
+#endif
     }
 
   /* on/off dpdk's telemetry thread */
