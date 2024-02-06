@@ -31,7 +31,13 @@ set(VPP_EXCLUDED_PLUGINS
 )
 
 # create the list of the plugins that we need to exclude from packaging
-SET(excluded_plugins "")
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
+# hs_apps, dpdk, unittest
+  SET(excluded_plugins "af_packet;fateshare;perfmon;vhost")
+else()
+  SET(excluded_plugins "")
+endif()
+
 STRING(REGEX REPLACE "[,]+" ";" exc_plugins "${VPP_EXCLUDED_PLUGINS}")
 foreach (e ${exc_plugins})
   message(WARNING "Excluding plugin due to VPP_EXCLUDED_PLUGINS: '${e}'")
