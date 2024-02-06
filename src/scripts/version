@@ -21,6 +21,14 @@ if [ -f .version ]; then
     vstring=$(cat .version)
 else
     vstring=$(git describe --long --match "v*")
+
+    # If we are inside a git tree we can have no tags (such as a github
+    # checkout). Rather than fail to build mark the version as 'DEVELOPMENT'.
+    if [ -d ../../.git ]; then
+	echo "DEVELOPMENT"
+	exit 0
+    fi
+
     if [ $? != 0 ]; then
       exit 1
     fi
