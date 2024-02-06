@@ -1,0 +1,227 @@
+# VPP on FreeBSD
+
+This branch represents upstreamable and local changs to run VPP on FreeBSD. It
+is currently a work in progress, but there should be enough support here to run
+VPP and forward packets using DPDK.
+
+There is further work in the pipeline to enable the testsuite to run, run
+multiple VPP instances and to enable netmap support with VPP on FreeBSD.
+
+## Reporting Issues
+
+If you test VPP on FreeBSD and have any issues or suggestions I would love to
+hear from you.
+
+Please create issues on my github branch (https://github.com/adventureloop/vpp)
+or you can send me emails directly at thj@freebsd.org
+
+## Building
+
+To build VPP on FreeBSD we need to install some required bootstrapping tools,
+clone the repository and switch to this branch. We can do this with the
+following commands:
+
+Install bootstrapping tools:
+
+    # pkg install git gmake bash
+
+Acquire VPP source and switch to `freebsd-vpp` branch:
+
+    $ git clone https://github.com/adventureloop/vpp
+    $ cd vpp
+    $ git fetch
+    $ git switch freebsd-vpp
+
+Bootstrap and build VPP:
+
+    $ gmake install-dep
+    $ gmake build
+
+
+## Running VPP
+
+For testing VPP can be run directly from the source directory from `gmake`,
+however the default VPP configuration uses DPDK which will error out on FreeBSD
+without some additional configuration.
+
+    $ gmake run
+    WARNING: STARTUP_CONF not defined or file doesn't exist.
+    Running with minimal startup config:  unix { interactive cli-listen /run/vpp/cli.sock gid 1001 } dpdk { no-pci } \n
+    tls_init_ca_chain:1088: Could not initialize TLS CA certificates
+    tls_openssl_init:1211: failed to initialize TLS CA chain
+    EAL: FATAL: Cannot get hugepage information.
+
+DPDK errors are typically prefixed with `EAL`.
+
+To run VPP with a non-default configuration from `gmake` it can be placed in
+the file `startup.conf`
+
+    unix {
+        interactive
+        cli-listen /run/vpp/cli.sock
+        gid $(shell id -g)
+    }
+
+    plugins {
+        plugin dpdk_plugin.so { disable }
+    }
+
+Until netmap support is integrated this VPP instance isn't very useful, but
+enabling DPDK will give us the ability to move packets around.
+
+
+## Running VPP with DPDK
+
+DPDK on FreeBSD requires two kernel modules to be loaded and configured, [DPDK
+offers documentation on this process here][dpdkconfig]. DPDK requires that both
+the `contigmem` and `nic_uio` kernel modules are loaded to discover and attach
+to PCI devices. 
+
+To use DPDK kernel modules the easiest option is to install the DPDK package:
+
+    # pkg install dpdk
+
+The kernel modules may need to be built again against your FreeBSD-HEAD
+install, in that case installing from ports may be required.
+
+With the kernel modules built you need to provide configuration via kenv before
+loading them. This can be done via `/etc/sysctl.conf` or on the command line
+manually.
+
+`contigmem` needs to be able to allocate contiguous blocks or memory at loading
+time and will error out if it is unable to allocate the configured buffers. If
+a machine has been running for a while memory may be too fragmented to make
+these allocations, the solution is to load `contigmem.ko` early in the systems
+boot, usually immediately after boot is early enough.
+
+`nic_uio` requires PCI device numbers for interfaces to be used with DPDK.
+`nic_uio` expected these in the FreeBSD numbering format while DPDK expects
+these in the Linux format.
+
+    # pciconf -lv
+    hostb0@pci0:0:0:0:      class=0x060000 rev=0x00 hdr=0x00 vendor=0x1275 device=0x1275 subvendor=0x0000 subdevice=0x0000
+        vendor     = 'Network Appliance Corporation'
+        class      = bridge
+        subclass   = HOST-PCI
+    isab0@pci0:0:1:0:       class=0x060100 rev=0x00 hdr=0x00 vendor=0x8086 device=0x7000 subvendor=0x0000 subdevice=0x0000
+        vendor     = 'Intel Corporation'
+        device     = '82371SB PIIX3 ISA [Natoma/Triton II]'
+        class      = bridge
+        subclass   = PCI-ISA
+    virtio_pci0@pci0:0:2:0: class=0x020000 rev=0x00 hdr=0x00 vendor=0x1af4 device=0x1000 subvendor=0x1af4 subdevice=0x0001
+        vendor     = 'Red Hat, Inc.'
+        device     = 'Virtio network device'
+        class      = network
+        subclass   = ethernet
+    virtio_pci1@pci0:0:3:0: class=0x020000 rev=0x00 hdr=0x00 vendor=0x1af4 device=0x1000 subvendor=0x1af4 subdevice=0x0001
+        vendor     = 'Red Hat, Inc.'
+        device     = 'Virtio network device'
+        class      = network
+        subclass   = ethernet
+    virtio_pci2@pci0:0:4:0: class=0x020000 rev=0x00 hdr=0x00 vendor=0x1af4 device=0x1000 subvendor=0x1af4 subdevice=0x0001
+        vendor     = 'Red Hat, Inc.'
+        device     = 'Virtio network device'
+        class      = network
+        subclass   = ethernet
+    virtio_pci3@pci0:0:5:0: class=0x010000 rev=0x00 hdr=0x00 vendor=0x1af4 device=0x1001 subvendor=0x1af4 subdevice=0x0002
+        vendor     = 'Red Hat, Inc.'
+        device     = 'Virtio block device'
+        class      = mass storage
+        subclass   = SCSI
+
+In this example we want VPP to attach to interfaces `virtio_pci1 and
+`virtio_pci2`. 
+
+For `nic_uio` we have to name the devices as `0:3:0` and `0:4:0` and in the VPP
+DPDK configuration `0000:00:03.0` and `0000:00:04.0`.
+
+    dev 0000:00:03.0
+    dev 0000:00:04.0
+
+As an example the following script creates 8 contigmem buffers of each 16MB and
+attaches to the virtio pci devices in slots `0:3:0` and `0:4:0`.
+
+    #!/bin/sh                             
+                                      
+    modroot="/home/tj"                    
+                                      
+    kenv hw.contigmem.num_buffers=8       
+    kenv hw.contigmem.buffer_size=16777216
+                                      
+    kenv hw.nic_uio.bdfs="0:3:0,0:4:0"    
+                                      
+    kldload contigmem.ko       
+    kldload nic_uio.ko         
+
+
+Once the DPDK kernel modules are loaded we can launc VPP again with a modified
+`startup.conf` file:
+
+    unix {
+        interactive
+        cli-listen /run/vpp/cli.sock
+        gid $(shell id -g)
+    }
+
+    dpdk {
+        dev 0000:00:03.0
+        dev 0000:00:04.0
+    }
+
+If everything is configured correctly VPP should start up with a minimum of
+complaints and its famous "FD.io" banner
+
+    $ gmake run
+    tls_init_ca_chain:1088: Could not initialize TLS CA certificates
+    tls_openssl_init:1211: failed to initialize TLS CA chain
+    vat-plug/load      [error ]: vat_plugin_register: idpf plugin not loaded...
+    vat-plug/load      [error ]: vat_plugin_register: oddbuf plugin not loaded...
+        _______    _        _   _____  ___ 
+     __/ __/ _ \  (_)__    | | / / _ \/ _ \
+     _/ _// // / / / _ \   | |/ / ___/ ___/
+     /_/ /____(_)_/\___/   |___/_/  /_/    
+
+    DBGvpp#
+
+
+
+To verify our set up we can list the network interfaces. The naming scheme for
+network PCI interfaces is the link speed and the PCI address. In our example we
+have:
+
+    DBGvpp# show interfaces
+              Name               Idx    State  MTU (L3/IP4/IP6/MPLS)     Counter          Count     
+    GigabitEthernet0/3/0              1     down         9000/0/0/0     
+    GigabitEthernet0/4/0              2     down         9000/0/0/0     
+    local0                            0     down          0/0/0/0       
+
+
+From here we can configure the VPP interfaces as we would in VPP on Linux. 
+
+
+    DBGvpp# set interface ip address GigabitEthernet0/3/0 10.10.0.1/24
+    interface          [error ]: hw_add_del_mac_address: dpdk_add_del_mac_address: mac address add/del failed: -1
+    interface          [error ]: hw_add_del_mac_address: dpdk_add_del_mac_address: mac address add/del failed: -1
+    DBGvpp# set int ip address GigabitEthernet0/4/0 10.20.0.1/24
+    interface          [error ]: hw_add_del_mac_address: dpdk_add_del_mac_address: mac address add/del failed: -1
+    interface          [error ]: hw_add_del_mac_address: dpdk_add_del_mac_address: mac address add/del failed: -1
+    DBGvpp# set int state GigabitEthernet0/3/0 up
+    DBGvpp# set int state GigabitEthernet0/4/0 up
+
+The DPDK errors occur in Linux as well, but do not seem to effect
+functionality. If we connect up our test machines virtio interfaces to a host
+at the other end we can verify functionality using VPP's `ping` plugin.
+
+    DBGvpp# ping 10.10.0.2
+    116 bytes from 10.10.0.2: icmp_seq=1 ttl=64 time=.1086 ms
+    116 bytes from 10.10.0.2: icmp_seq=2 ttl=64 time=.1744 ms
+    116 bytes from 10.10.0.2: icmp_seq=3 ttl=64 time=.1160 ms
+    116 bytes from 10.10.0.2: icmp_seq=4 ttl=64 time=.1038 ms
+    116 bytes from 10.10.0.2: icmp_seq=5 ttl=64 time=.1939 ms
+
+    Statistics: 5 sent, 5 received, 0% packet loss
+    DBGvpp# 
+
+
+
+[dpdkconfig]:       https://doc.dpdk.org/guides/freebsd_gsg/build_dpdk.html#loading-the-dpdk-contigmem-module
