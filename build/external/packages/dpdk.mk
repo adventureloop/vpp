@@ -167,6 +167,12 @@ elif [[ "$(DPDK_$(1))" == "n" ]]; then \
 fi
 endef
 
+# patch out undefined symbols, these generator compiler errors rather than
+# warnings on llvm after 16
+define dpdk_config_undefined
+sed -i -e 's/$(2)/$(HASH)$(2)/' $(dpdk_src_dir)/lib/$(1)
+endef
+
 DPDK_MESON_ARGS = \
 	--default-library static \
 	--libdir lib \
@@ -200,7 +206,32 @@ define dpdk_config_cmds
 	echo "DPDK post meson configuration" && \
 	echo "Altering rte_build_config.h" && \
 	$(call dpdk_config,PKTMBUF_HEADROOM) && \
-	$(call dpdk_config_def,USE_LIBBSD)
+	$(call dpdk_config_def,USE_LIBBSD) && \
+	echo "Altering eal version.map to support llvm > 16" && \
+	$(call dpdk_config_undefined,eal/version.map,rte_eal_hpet_init) && \
+	$(call dpdk_config_undefined,eal/version.map,rte_get_hpet_cycles) && \
+	$(call dpdk_config_undefined,eal/version.map,rte_get_hpet_hz) && \
+	$(call dpdk_config_undefined,metrics/version.map,rte_metrics_tel_get_global_stats) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_timer_arm_burst) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_timer_arm_tmo_tick_burst) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_timer_cancel_burst) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_pmd_get_named_dev) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_pmd_is_valid_dev) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_pmd_pci_probe) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_pmd_pci_probe_named) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_pmd_pci_remove) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_pmd_vdev_init) && \
+	$(call dpdk_config_undefined,eventdev/version.map,rte_event_pmd_vdev_uninit) && \
+	$(call dpdk_config_undefined,regexdev/version.map,rte_regexdev_dequeue_burst) && \
+	$(call dpdk_config_undefined,regexdev/version.map,rte_regexdev_enqueue_burst) && \
+	$(call dpdk_config_undefined,ipsec/version.map,rte_ipsec_pkt_crypto_group) && \
+	$(call dpdk_config_undefined,ipsec/version.map,rte_ipsec_pkt_crypto_prepare) && \
+	$(call dpdk_config_undefined,ipsec/version.map,rte_ipsec_pkt_process) && \
+	$(call dpdk_config_undefined,ipsec/version.map,rte_ipsec_ses_from_crypto) && \
+	$(call dpdk_config_undefined,pdcp/version.map,rte_pdcp_en_from_cop) && \
+	$(call dpdk_config_undefined,pdcp/version.map,rte_pdcp_pkt_post_process) && \
+	$(call dpdk_config_undefined,pdcp/version.map,rte_pdcp_pkt_pre_process) && \
+	$(call dpdk_config_undefined,pdcp/version.map,rte_pdcp_pkt_crypto_group)
 endef
 
 ifeq ("$(DPDK_VERBOSE)","1")
