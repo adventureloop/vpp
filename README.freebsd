@@ -222,6 +222,44 @@ at the other end we can verify functionality using VPP's `ping` plugin.
     Statistics: 5 sent, 5 received, 0% packet loss
     DBGvpp# 
 
+## Running VPP with netmap
+
+VPP supports the use of netmap enabling high performance userspace networking
+without the need to use and configure DPDK. The netmap plugin is built by
+default on FreeBSD.
+
+Netmap interfaces are bound using the vpp `create` command. They are named
+directly after the device name and not by the netmap naming convention, the
+created devices in vpp have the `netmap-` prefix. To bind a netmap interface to
+the `epair0a` device you would run the following command:
+
+    vpp# create netmap name epair0a
+
+The name parameter is passed to the netmap plugin and it allows netmap to
+distinguish between device and vale mappings. 
+
+The following session shows configuration of a netmap interface from the build
+directory.
+
+    $ gmake run
+    tls_init_ca_chain:1088: Could not initialize TLS CA certificates
+    tls_openssl_init:1211: failed to initialize TLS CA chain
+    vat-plug/load      [error ]: vat_plugin_register: idpf plugin not loaded...
+    vat-plug/load      [error ]: vat_plugin_register: oddbuf plugin not loaded...
+        _______    _        _   _____  ___ 
+     __/ __/ _ \  (_)__    | | / / _ \/ _ \
+     _/ _// // / / / _ \   | |/ / ___/ ___/
+     /_/ /____(_)_/\___/   |___/_/  /_/    
+
+    DBGvpp# create netmap name epair0a
+    netmap_create_if:163: mem 0x8ed000000
+    netmap-epair0a
+    DBGvpp# show int
+              Name               Idx    State  MTU (L3/IP4/IP6/MPLS)     Counter          Count     
+    local0                            0     down          0/0/0/0       
+    netmap-epair0a                    3     down         9000/0/0/0     
+    DBGvpp# set int ip address netmap-epair0a 10.44.0.1/24
+    DBGvpp# set int state netmap-epair0a up
 
 
 [dpdkconfig]:       https://doc.dpdk.org/guides/freebsd_gsg/build_dpdk.html#loading-the-dpdk-contigmem-module
