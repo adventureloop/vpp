@@ -23,7 +23,7 @@ following commands:
 
 Install bootstrapping tools:
 
-    # pkg install git gmake bash
+    # pkg install git gmake bash sudo
 
 Acquire VPP source and switch to `freebsd-vpp` branch:
 
@@ -37,6 +37,7 @@ Bootstrap and build VPP:
     $ gmake install-dep
     $ gmake build
 
+For the `install-dep` and `run` make steps to work the user needs to be added to the sudoers file.
 
 ## Running VPP
 
