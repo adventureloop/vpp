@@ -1453,6 +1453,21 @@ list(APPEND VNET_API_FILES
 )
 
 ##############################################################################
+# FreeBSD - use epoll-shim
+##############################################################################
+set(FREEBSD_LIBS "")
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
+  find_path(EPOLL_SHIM_INCLUDE_DIR NAMES sys/timerfd.h HINTS /usr/local/include/libepoll-shim)
+  find_library(EPOLL_SHIM_LIB NAMES epoll-shim HINTS /usr/local/lib)
+
+if(EPOLL_SHIM_INCLUDE_DIR AND EPOLL_SHIM_LIB)
+    message(STATUS "Found epoll-shim in ${EPOLL_SHIM_INCLUDE_DIR}")
+    include_directories(${EPOLL_SHIM_INCLUDE_DIR})
+    string(JOIN " " FREEBSD_LIBS "${EPOLL_SHIM_LIB}")
+  endif()
+endif()
+
+##############################################################################
 # VNET Library
 ##############################################################################
 
@@ -1461,7 +1476,7 @@ add_vpp_library(vnet
   MULTIARCH_SOURCES ${VNET_MULTIARCH_SOURCES}
   INSTALL_HEADERS ${VNET_HEADERS}
   API_FILES ${VNET_API_FILES}
-  LINK_LIBRARIES vppinfra svm vlib
+  LINK_LIBRARIES vppinfra svm vlib ${FREEBSD_LIBS}
   DEPENDS vpp_version_h api_headers
 )
 
