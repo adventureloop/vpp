@@ -22,9 +22,10 @@
 #include <sched.h>
 
 #include <vppinfra/format.h>
-#ifdef __line__
+#ifdef __linux__
 #include <vppinfra/linux/sysfs.h>
 #else
+#include <sys/ioctl.h>
 #include <sys/memrange.h>
 #include <vppinfra/freebsd/system.h>
 #endif /* __linux__ */
