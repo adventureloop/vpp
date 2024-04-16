@@ -110,6 +110,7 @@ netmap_create_if (vlib_main_t * vm, u8 * if_name, u8 * hw_addr_set,
 {
   netmap_main_t *nm = &netmap_main;
   int ret = 0;
+  uint32_t nr_reg;
   netmap_if_t *nif = 0;
   u8 hw_addr[6];
   vnet_sw_interface_t *sw;
@@ -171,10 +172,31 @@ netmap_create_if (vlib_main_t * vm, u8 * if_name, u8 * hw_addr_set,
   reg->refcnt++;
 
   nif->nifp = NETMAP_IF (reg->mem, req->nr_offset);
-  nif->first_rx_ring = 0;
-  nif->last_rx_ring = 0;
-  nif->first_tx_ring = 0;
-  nif->last_tx_ring = 0;
+  nr_reg = nif->req->nr_flags & NR_REG_MASK;
+
+  if (nr_reg == NR_REG_SW) { /* host stack */
+    nif->first_tx_ring = nif->last_tx_ring = nif->req->nr_tx_rings;
+    nif->first_rx_ring = nif->last_rx_ring = nif->req->nr_rx_rings;
+  } else if (nr_reg ==  NR_REG_ALL_NIC) { /* only nic */
+    nif->first_tx_ring = 0;
+    nif->first_rx_ring = 0;
+    nif->last_tx_ring = nif->req->nr_tx_rings - 1;
+    nif->last_rx_ring = nif->req->nr_rx_rings - 1;
+  } else if (nr_reg ==  NR_REG_NIC_SW) {
+    nif->first_tx_ring = 0;
+    nif->first_rx_ring = 0;
+    nif->last_tx_ring = nif->req->nr_tx_rings;
+    nif->last_rx_ring = nif->req->nr_rx_rings;
+  } else if (nr_reg == NR_REG_ONE_NIC) {
+    /* XXX check validity */
+    nif->first_tx_ring = nif->last_tx_ring =
+    nif->first_rx_ring = nif->last_rx_ring =
+      nif->req->nr_ringid & NETMAP_RING_MASK;
+  } else { /* pipes */
+    nif->first_tx_ring = nif->last_tx_ring = 0;
+    nif->first_rx_ring = nif->last_rx_ring = 0;
+  }
+
   nif->host_if_name = if_name;
   nif->per_interface_next_index = ~0;
 
