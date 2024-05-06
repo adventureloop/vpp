@@ -22,6 +22,14 @@ DPDK_MLX_IBV_LINK            ?= static
 dpdk_version                 ?= 23.11
 dpdk_base_url                ?= http://fast.dpdk.org/rel
 dpdk_tarball                 := dpdk-$(dpdk_version).tar.xz
+
+# Grab this commit as our dpdk archive
+# https://github.com/adventureloop/dpdk/archive/3342a79d56c987dacb290801defdc7c2d54f936e.tar.gz
+dpdk_version                  = dev
+dpdk_base_url                 = https://github.com/adventureloop/dpdk/archive
+dpdk_tarball                  = 3342a79d56c987dacb290801defdc7c2d54f936e.tar.gz
+dpdk_tarball_md5sum_dev       = d6e6971e00ba9077ed3ef3c43eef1dc0
+
 dpdk_tarball_md5sum_23.11    := 896c09f5b45b452bd77287994650b916
 dpdk_tarball_md5sum_23.07    := 2b6d57f077585cb15b885482362fd47f
 dpdk_tarball_md5sum_23.03    := 3cf8ebbcd412d5726db230f2eeb90cc9
