@@ -1040,8 +1040,8 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
   u8 no_pci = 0;
   u8 no_vmbus = 0;
   u8 *socket_mem = 0;
-#ifdef __linux__
   u8 file_prefix = 0;
+#ifdef __linux__
   vlib_thread_main_t *tm = vlib_get_thread_main ();
   uword default_hugepage_sz, x;
   u8 *huge_dir_path = 0;
@@ -1212,7 +1212,20 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
 	  }
 	foreach_eal_double_hyphen_arg
 #undef _
-#endif /* __linux__ */
+#elif defined(__FreeBSD__)
+#define _(a)                                          \
+	else if (unformat(input, #a " %s", &s))	      \
+	  {					      \
+            if (!strncmp(#a, "file-prefix", 11)) \
+              file_prefix = 1;                        \
+	    tmp = format (0, "--%s%c", #a, 0);	      \
+	    vec_add1 (conf->eal_init_args, tmp);      \
+	    vec_add1 (s, 0);			      \
+	    vec_add1 (conf->eal_init_args, s);	      \
+	  }
+	foreach_eal_double_hyphen_arg
+#undef _
+#endif
 #define _(a,b)						\
 	  else if (unformat(input, #a " %s", &s))	\
 	    {						\
@@ -1275,6 +1288,14 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
       tmp = format (0, "--file-prefix%c", 0);
       vec_add1 (conf->eal_init_args, tmp);
       tmp = format (0, "vpp%c", 0);
+      vec_add1 (conf->eal_init_args, tmp);
+    }
+#elif defined(__FreeBSD__)
+  if (!file_prefix)
+    {
+      tmp = format (0, "--file-prefix%c", 0);
+      vec_add1 (conf->eal_init_args, tmp);
+      tmp = format (0, "contigmem0%c", 0);
       vec_add1 (conf->eal_init_args, tmp);
     }
 #endif
