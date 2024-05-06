@@ -7,11 +7,18 @@
 # https://github.com/adventureloop/dpdk/commit/3342a79d56c987dacb290801defdc7c2d54f936e
 #
 
+dpdkpath="$(HOME)/code/dpdk"	# this is only correct on my systems
+
 kenv hw.contigmem.num_devices=2
 kenv hw.contigmem.num_buffers=2
 kenv hw.contigmem.buffer_size=536870912
 
 kenv hw.nic_uio.bdfs="0:3:0,0:4:0"
 
-kldload ./contigmem.ko
-kldload ../nic_uio/nic_uio.ko
+cd $dpdkpath
+
+make -C contigmem
+make -C nic_uio
+
+kldload ./contigmem/contigmem.ko
+kldload ./nic_uio/nic_uio.ko
