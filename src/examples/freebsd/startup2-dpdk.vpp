@@ -1,0 +1,9 @@
+create interface memif id 0 slave
+set interface ip address memif0/0 10.3.0.21/24
+set interface state memif0/0 up
+
+set interface ip address GigabitEthernet0/4/0 10.2.0.1/24
+set interface state GigabitEthernet0/4/0 up
+
+ip route add 10.3.0.0/24 via 10.3.0.11
+ip route add 10.1.0.0/24 via 10.3.0.11

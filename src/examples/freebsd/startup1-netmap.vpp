@@ -1,0 +1,15 @@
+#create interface memif id 0 master
+
+#set interface ip address memif0/0 10.3.0.1/24
+#set interface state memif0/0 up
+
+create netmap name epair0a
+create netmap name vtnet1
+
+set interface ip address netmap-epair0a 10.3.0.1/24
+set interface state netmap-epair0a up
+
+set interface ip address netmap-vtnet1 10.1.0.1/24
+set interface state netmap-vtnet1 up
+
+ip route add 10.2.0.0/24 via 10.3.0.1
